@@ -160,6 +160,40 @@ h3 {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
 }
 
+/* Varm smedje-glød øverst på fladen — som en esse lige uden for billedet */
+.forge-glow {
+  position: fixed;
+  top: -22vmax;
+  left: 50%;
+  width: 95vmax;
+  height: 60vmax;
+  transform: translateX(-50%);
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    50% 50% at 50% 50%,
+    rgba(242, 106, 27, 0.14) 0%,
+    rgba(184, 64, 10, 0.07) 38%,
+    transparent 70%
+  );
+  filter: blur(10px);
+}
+
+/* Smedet fremdriftslinje — tynd glødende stribe der følger scroll-dybden */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 60;
+  height: 2px;
+  width: 100%;
+  transform: scaleX(var(--scroll, 0));
+  transform-origin: 0 50%;
+  background: linear-gradient(90deg, var(--ember-deep), var(--ember) 55%, #ffc070);
+  box-shadow: 0 0 12px rgba(242, 106, 27, 0.7);
+  pointer-events: none;
+}
+
 /* ── Navigation ─────────────────────────────────────────────── */
 
 .nav {
@@ -292,30 +326,111 @@ h3 {
   margin: 0 auto;
 }
 
+/* Det smedede C-emblem, stort og lysende bag hero — tydeligt, men toner ud mod teksten */
 .hero-watermark {
   position: absolute;
-  right: clamp(-180px, -6vw, -40px);
+  right: clamp(-200px, -3vw, -40px);
   top: 50%;
-  transform: translateY(-50%);
-  color: var(--ink);
-  opacity: 0.05;
+  z-index: 0;
   pointer-events: none;
-  -webkit-mask-image: linear-gradient(to left, black 30%, transparent 95%);
-  mask-image: linear-gradient(to left, black 30%, transparent 95%);
+  opacity: 0;
+  transform: translateY(-50%) scale(0.9) rotate(-4deg);
+  -webkit-mask-image: radial-gradient(125% 115% at 78% 50%, #000 32%, transparent 74%);
+  mask-image: radial-gradient(125% 115% at 78% 50%, #000 32%, transparent 74%);
+  animation: emblem-in 1.5s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+}
+
+.hero-watermark .logo-mark {
+  filter: drop-shadow(0 0 34px rgba(242, 106, 27, 0.34));
+  animation: forge-breathe 7s ease-in-out 1.7s infinite;
+}
+
+@keyframes emblem-in {
+  to {
+    opacity: 0.5;
+    transform: translateY(-50%) scale(1) rotate(-4deg);
+  }
+}
+
+@keyframes forge-breathe {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 26px rgba(242, 106, 27, 0.26));
+  }
+  50% {
+    filter: drop-shadow(0 0 50px rgba(242, 106, 27, 0.5));
+  }
+}
+
+/* Hero-indhold løftes klart over emblem + gnister */
+.hero > :not(.hero-watermark):not(.embers) {
+  position: relative;
+  z-index: 2;
+}
+
+/* Stigende smedje-gnister */
+.embers {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ember-mote {
+  position: absolute;
+  bottom: -12px;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffe2b0 0%, var(--ember) 55%, transparent 75%);
+  box-shadow: 0 0 8px rgba(242, 106, 27, 0.85);
+  opacity: 0;
+  animation-name: mote-rise;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes mote-rise {
+  0% {
+    transform: translateY(0) translateX(0) scale(calc(var(--mote-scale, 1) * 0.5));
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.95;
+  }
+  85% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(-82vh) translateX(26px) scale(var(--mote-scale, 1));
+    opacity: 0;
+  }
 }
 
 .hero-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  align-self: flex-start;
   font-family: var(--font-mono), monospace;
-  font-size: 13px;
+  font-size: 12.5px;
   text-transform: uppercase;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.2em;
   color: var(--dim);
-  margin-bottom: 28px;
+  margin-bottom: 30px;
+  padding: 8px 16px 8px 12px;
+  border: 1px solid rgba(242, 106, 27, 0.28);
+  border-radius: 999px;
+  background: rgba(242, 106, 27, 0.06);
+  box-shadow: inset 0 0 18px rgba(242, 106, 27, 0.08);
 }
 
 .rune-accent {
   color: var(--ember);
-  margin-right: 6px;
+  font-size: 16px;
+  line-height: 1;
+  text-shadow: 0 0 12px rgba(242, 106, 27, 0.7);
 }
 
 .hero-title {
@@ -329,15 +444,29 @@ h3 {
 }
 
 .hero-title-accent {
+  position: relative;
+  width: fit-content;
   background: linear-gradient(
     100deg,
     var(--ember-deep) 0%,
-    var(--ember) 45%,
-    #f9a826 100%
+    var(--ember) 42%,
+    #ffc664 100%
   );
+  background-size: 200% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  animation: ember-sheen 6s ease-in-out infinite;
+}
+
+@keyframes ember-sheen {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 
 .hero-sub {
@@ -369,13 +498,35 @@ h3 {
 }
 
 .btn-solid {
-  background: var(--ember);
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--ember-light), var(--ember) 55%, var(--ember-deep));
   color: var(--on-ember);
+  box-shadow: 0 6px 22px -8px rgba(242, 106, 27, 0.5);
+}
+
+/* Strejf af lys der fejer hen over knappen ved hover — som glød på varmt jern */
+.btn-solid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-120%) skewX(-20deg);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 240, 220, 0.45),
+    transparent
+  );
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .btn-solid:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(242, 106, 27, 0.25);
+  box-shadow: 0 12px 38px -8px rgba(242, 106, 27, 0.55);
+}
+
+.btn-solid:hover::before {
+  transform: translateX(120%) skewX(-20deg);
 }
 
 .btn-ghost {
@@ -492,18 +643,25 @@ h3 {
 .card {
   position: relative;
   display: block;
-  background: var(--panel);
+  background:
+    radial-gradient(120% 140% at 100% 0%, rgba(242, 106, 27, 0.05), transparent 55%),
+    var(--panel);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: clamp(26px, 3vw, 40px);
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s,
-    background 0.3s;
+    background 0.3s, box-shadow 0.3s;
 }
 
 .card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-5px);
   border-color: var(--line-strong);
-  background: rgba(232, 184, 130, 0.07);
+  background:
+    radial-gradient(120% 140% at 100% 0%, rgba(242, 106, 27, 0.1), transparent 55%),
+    rgba(232, 184, 130, 0.07);
+  box-shadow: 0 24px 60px -28px rgba(0, 0, 0, 0.8),
+    0 0 0 1px rgba(242, 106, 27, 0.12),
+    inset 0 1px 0 rgba(255, 220, 180, 0.05);
 }
 
 /* Ristede hjørne-mærker — som hugget i en runesten; tænder i is ved hover */
@@ -702,16 +860,24 @@ a.product-card:hover {
   display: block;
 }
 
-/* Valknut — Odins tegn — som svagt vandmærke bag kontaktsektionen */
+/* Valknut — Odins tegn — som glødende vandmærke bag kontaktsektionen */
 .contact-valknut {
   position: absolute;
   top: clamp(40px, 7vw, 90px);
   right: clamp(-40px, 2vw, 40px);
   color: var(--ember);
-  opacity: 0.16;
+  opacity: 0.22;
   pointer-events: none;
+  filter: drop-shadow(0 0 22px rgba(242, 106, 27, 0.35));
   -webkit-mask-image: radial-gradient(closest-side, #000 60%, transparent);
   mask-image: radial-gradient(closest-side, #000 60%, transparent);
+  animation: valknut-turn 60s linear infinite;
+}
+
+@keyframes valknut-turn {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .valknut {
@@ -838,8 +1004,10 @@ a.product-card:hover {
   }
 
   .hero-watermark {
-    opacity: 0.035;
-    right: -260px;
+    animation: none;
+    opacity: 0.28;
+    right: -180px;
+    transform: translateY(-50%) scale(0.82) rotate(-4deg);
   }
 }
 
@@ -1179,6 +1347,724 @@ a.product-card:hover {
   }
 }
 
+/* ── Kontaktformular ────────────────────────────────────────── */
+
+.kontakt-form {
+  max-width: 640px;
+  margin-top: 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.kontakt-raekke {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.kontakt-felt {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.kontakt-felt > span {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+}
+
+.kontakt-felt input,
+.kontakt-felt textarea {
+  width: 100%;
+  padding: 13px 15px;
+  background: rgba(232, 184, 130, 0.04);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--ink);
+  font: inherit;
+  font-size: 15.5px;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+
+.kontakt-felt textarea {
+  resize: vertical;
+  min-height: 132px;
+  line-height: 1.55;
+}
+
+.kontakt-felt input::placeholder,
+.kontakt-felt textarea::placeholder {
+  color: var(--faint);
+  opacity: 0.7;
+}
+
+.kontakt-felt input:focus,
+.kontakt-felt textarea:focus {
+  outline: none;
+  border-color: var(--ember);
+  background: rgba(242, 106, 27, 0.05);
+  box-shadow: 0 0 0 3px rgba(242, 106, 27, 0.12);
+}
+
+/* Honeypot — skjult for mennesker */
+.kontakt-honeypot {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.kontakt-bund {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.kontakt-send {
+  border: none;
+  cursor: pointer;
+}
+
+.kontakt-send:disabled {
+  opacity: 0.65;
+  cursor: progress;
+}
+
+.kontakt-status {
+  font-size: 14px;
+}
+
+.kontakt-fejl {
+  color: #e8a07f;
+}
+
+.kontakt-direkte {
+  font-family: var(--font-mono), monospace;
+  font-size: 12.5px;
+  color: var(--faint);
+}
+
+.kontakt-direkte a {
+  color: var(--ember);
+  border-bottom: 1px solid rgba(242, 106, 27, 0.3);
+  transition: border-color 0.2s;
+}
+
+.kontakt-direkte a:hover {
+  border-color: var(--ember);
+}
+
+.kontakt-kvittering {
+  max-width: 640px;
+  margin-top: 36px;
+  padding: clamp(24px, 4vw, 36px);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: rgba(242, 106, 27, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+/* Programmatisk fokus efter succes skal ikke vise en ramme */
+.kontakt-kvittering:focus {
+  outline: none;
+}
+
+.kontakt-kvittering-rune {
+  font-size: 30px;
+  line-height: 1;
+  color: var(--ember);
+  text-shadow: 0 0 18px rgba(242, 106, 27, 0.6);
+}
+
+.kontakt-kvittering p {
+  color: var(--ink);
+  font-size: 17px;
+}
+
+/* ── Admin: visnings-faner + beskeder ───────────────────────── */
+
+.admin-faner {
+  display: flex;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.admin-faner a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-family: var(--font-mono), monospace;
+  font-size: 12.5px;
+  color: var(--dim);
+  border-right: 1px solid var(--line);
+  transition: background 0.15s, color 0.15s;
+}
+
+.admin-faner a:last-child {
+  border-right: none;
+}
+
+.admin-faner a:hover {
+  color: var(--ink);
+}
+
+.admin-faner a.aktiv {
+  background: var(--ember);
+  color: var(--on-ember);
+}
+
+.admin-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--ember);
+  color: var(--on-ember);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.admin-faner a.aktiv .admin-badge {
+  background: var(--on-ember);
+  color: var(--ember);
+}
+
+.admin-analytics-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.besked-faner {
+  display: flex;
+  gap: 6px;
+}
+
+.besked-faner button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--dim);
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.besked-faner button:hover {
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
+
+.besked-faner button.aktiv {
+  color: var(--ember);
+  border-color: rgba(242, 106, 27, 0.5);
+  background: rgba(242, 106, 27, 0.08);
+}
+
+.besked-faner-antal {
+  font-size: 11px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(245, 240, 232, 0.07);
+}
+
+.besked-liste {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.besked {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.besked-ulaest {
+  border-color: rgba(242, 106, 27, 0.35);
+  background: rgba(242, 106, 27, 0.04);
+}
+
+.besked-aaben {
+  border-color: var(--line-strong);
+}
+
+.besked-hoved {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 12px minmax(130px, 1.1fr) 2fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+}
+
+.besked-prik {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.besked-ulaest .besked-prik {
+  background: var(--ember);
+  box-shadow: 0 0 8px rgba(242, 106, 27, 0.7);
+}
+
+.besked-afsender {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.besked-navn {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.besked-email {
+  font-family: var(--font-mono), monospace;
+  font-size: 11.5px;
+  color: var(--faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.besked-emne {
+  min-width: 0;
+  font-size: 14px;
+  color: var(--dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.besked-ulaest .besked-emne {
+  color: var(--ink);
+}
+
+.besked-preview {
+  color: var(--faint);
+}
+
+.besked-dato {
+  font-family: var(--font-mono), monospace;
+  font-size: 11.5px;
+  color: var(--faint);
+  white-space: nowrap;
+}
+
+.besked-krop {
+  padding: 0 16px 18px;
+  border-top: 1px solid var(--line);
+}
+
+.besked-tekst {
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.6;
+  padding: 16px 0;
+  max-width: 64ch;
+}
+
+.besked-meta {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-family: var(--font-mono), monospace;
+  font-size: 11.5px;
+  color: var(--faint);
+  margin-bottom: 16px;
+}
+
+.besked-handlinger {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.besked-handlinger form {
+  display: inline;
+}
+
+.admin-knap-fare {
+  border-color: rgba(224, 138, 127, 0.4);
+  color: #e08a7f;
+}
+
+.admin-knap-fare:hover {
+  border-color: #e08a7f;
+  color: #f0a99f;
+  background: rgba(224, 138, 127, 0.08);
+}
+
+@media (max-width: 760px) {
+  .kontakt-raekke {
+    grid-template-columns: 1fr;
+  }
+
+  .besked-hoved {
+    grid-template-columns: 12px 1fr;
+    row-gap: 6px;
+  }
+
+  .besked-emne {
+    grid-column: 1 / -1;
+    white-space: normal;
+  }
+
+  .besked-dato {
+    grid-column: 2;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ODIN — kommandocenter-HUD (admin)
+   Smedet rune-HUD: glødende paneler m. hjørnebeslag, gitter, scanlines,
+   mono-aflæsninger. Bygger på forge-paletten; kold "seid"-glød som kontrast.
+   ══════════════════════════════════════════════════════════════ */
+
+:root {
+  --hud-line: rgba(242, 106, 27, 0.3);
+  --hud-line-soft: rgba(242, 106, 27, 0.13);
+  --hud-glow: rgba(242, 106, 27, 0.55);
+  --seid: #74e3d2; /* kold rune-blågrøn — sekundær accent */
+  --seid-soft: rgba(116, 227, 210, 0.5);
+}
+
+.odin {
+  position: relative;
+  min-height: 100vh;
+  background:
+    radial-gradient(1100px 560px at 50% -8%, rgba(242, 106, 27, 0.07), transparent 70%),
+    radial-gradient(900px 500px at 92% 0%, rgba(116, 227, 210, 0.045), transparent 65%),
+    linear-gradient(rgba(242, 106, 27, 0.022) 1px, transparent 1px) 0 0 / 100% 36px,
+    linear-gradient(90deg, rgba(242, 106, 27, 0.022) 1px, transparent 1px) 0 0 / 36px 100%,
+    var(--bg);
+}
+
+/* Tynd løbende scanline over hele HUD'en */
+.odin::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    rgba(242, 106, 27, 0) 0%,
+    rgba(242, 106, 27, 0.05) 50%,
+    rgba(242, 106, 27, 0) 100%
+  );
+  height: 140px;
+  top: -140px;
+  animation: hud-scan 7s linear infinite;
+}
+
+@keyframes hud-scan {
+  to {
+    transform: translateY(calc(100vh + 280px));
+  }
+}
+
+.odin > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Panel ──────────────────────────────────────────────────── */
+.hud-panel {
+  position: relative;
+  background: linear-gradient(180deg, rgba(24, 18, 12, 0.72), rgba(13, 11, 9, 0.66));
+  border: 1px solid var(--hud-line-soft);
+  border-radius: 3px;
+  padding: clamp(16px, 1.6vw, 22px);
+  box-shadow:
+    inset 0 0 34px rgba(242, 106, 27, 0.045),
+    0 14px 44px -28px #000;
+  backdrop-filter: blur(5px);
+}
+
+/* Hjørne-beslag — som hugget vinkeljern i de fire hjørner */
+.hud-panel::before,
+.hud-panel::after {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid var(--hud-line);
+  pointer-events: none;
+}
+.hud-panel::before {
+  top: 6px;
+  left: 6px;
+  border-width: 1.5px 0 0 1.5px;
+}
+.hud-panel::after {
+  bottom: 6px;
+  right: 6px;
+  border-width: 0 1.5px 1.5px 0;
+}
+
+.hud-panel-accent {
+  border-color: var(--hud-line);
+  box-shadow:
+    inset 0 0 40px rgba(242, 106, 27, 0.08),
+    0 0 0 1px rgba(242, 106, 27, 0.06),
+    0 14px 44px -26px #000;
+}
+
+/* ── Panel-hoved + labels ───────────────────────────────────── */
+.hud-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.hud-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--font-mono), monospace;
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--ember);
+}
+
+.hud-label .hud-rune {
+  font-size: 15px;
+  line-height: 1;
+  color: var(--ember);
+  text-shadow: 0 0 12px var(--hud-glow);
+}
+
+.hud-meta {
+  font-family: var(--font-mono), monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  color: var(--faint);
+}
+
+/* Glødende skille-hårstreg */
+.hud-divider {
+  height: 1px;
+  background: linear-gradient(90deg, var(--hud-line), transparent);
+}
+
+/* ── Mono-aflæsning (store tal) ─────────────────────────────── */
+.hud-readout {
+  font-family: var(--font-display), sans-serif;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--ink);
+  text-shadow: 0 0 22px rgba(242, 106, 27, 0.25);
+  font-variant-numeric: tabular-nums;
+}
+
+.hud-readout-xl {
+  font-size: clamp(30px, 3.4vw, 46px);
+}
+
+.hud-unit {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--faint);
+  text-transform: uppercase;
+}
+
+/* ── Generisk fordelings-bjælke (top-lister/enheder) ────────── */
+.hud-bars {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.hud-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 10px;
+  border-radius: 2px;
+  overflow: hidden;
+  font-size: 13.5px;
+}
+
+.hud-bar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: linear-gradient(90deg, rgba(242, 106, 27, 0.22), rgba(242, 106, 27, 0.05));
+  border-right: 1.5px solid var(--hud-glow);
+}
+
+.hud-bar-navn {
+  position: relative;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--ink);
+}
+
+.hud-bar-tal {
+  position: relative;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  color: var(--dim);
+}
+
+/* ── Delta-chip (genbrugt fra KPI) ──────────────────────────── */
+.hud-delta {
+  font-family: var(--font-mono), monospace;
+  font-size: 11.5px;
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+.hud-delta-op {
+  color: #8fe3b0;
+  background: rgba(110, 220, 160, 0.12);
+}
+.hud-delta-ned {
+  color: #e89a7f;
+  background: rgba(224, 138, 127, 0.12);
+}
+.hud-delta-nul {
+  color: var(--faint);
+}
+
+/* ── Live-puls-prik ─────────────────────────────────────────── */
+.hud-puls {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--seid);
+  box-shadow: 0 0 0 0 var(--seid-soft);
+  animation: hud-puls 2.2s infinite;
+}
+@keyframes hud-puls {
+  0% {
+    box-shadow: 0 0 0 0 var(--seid-soft);
+  }
+  70% {
+    box-shadow: 0 0 0 9px rgba(116, 227, 210, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(116, 227, 210, 0);
+  }
+}
+
+/* ── Kommandocenter-grid ────────────────────────────────────── */
+.odin-wrap {
+  max-width: 1380px;
+  margin: 0 auto;
+  padding: clamp(16px, 3vw, 30px) clamp(14px, 3vw, 32px) 80px;
+}
+
+/* Lodret stak af kommandocenter-rækker */
+.odin-stak {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* KPI-stribe — auto-tilpassende kort */
+.odin-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+  gap: 14px;
+}
+
+/* Legende til trafikgraf */
+.odin-legende {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.odin-prik {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin: 0 2px 0 8px;
+  vertical-align: middle;
+}
+.odin-prik-ember {
+  background: var(--ember);
+  box-shadow: 0 0 7px rgba(242, 106, 27, 0.7);
+}
+.odin-prik-seid {
+  background: var(--seid);
+  box-shadow: 0 0 7px rgba(116, 227, 210, 0.7);
+}
+
+.odin-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 14px;
+}
+
+.col-3 { grid-column: span 3; }
+.col-4 { grid-column: span 4; }
+.col-5 { grid-column: span 5; }
+.col-6 { grid-column: span 6; }
+.col-7 { grid-column: span 7; }
+.col-8 { grid-column: span 8; }
+.col-12 { grid-column: span 12; }
+
+@media (max-width: 1100px) {
+  .col-3 { grid-column: span 6; }
+  .col-4, .col-5 { grid-column: span 6; }
+  .col-7, .col-8 { grid-column: span 12; }
+}
+@media (max-width: 680px) {
+  .col-3, .col-4, .col-5, .col-6 { grid-column: span 12; }
+}
+
 /* ── Reduceret bevægelse ────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
@@ -1196,7 +2082,27 @@ a.product-card:hover {
 
   .aurora-band,
   .rune-band-track,
-  .tag-live .dot {
+  .tag-live .dot,
+  .ember-mote,
+  .hero-watermark .logo-mark,
+  .hero-title-accent,
+  .contact-valknut,
+  .odin::before,
+  .hud-puls {
     animation: none;
+  }
+
+  .embers {
+    display: none;
+  }
+
+  .hero-watermark {
+    animation: none;
+    opacity: 0.4;
+    transform: translateY(-50%) rotate(-4deg);
+  }
+
+  .btn-solid::before {
+    display: none;
   }
 }

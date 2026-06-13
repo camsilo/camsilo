@@ -64,6 +64,21 @@ export const dict = {
     contactBody: "Skriv til os — vi svarer hurtigt.",
     contactCta: "kontakt@camsilo.dk",
 
+    formNavn: "Navn",
+    formNavnPlaceholder: "Dit navn",
+    formEmail: "E-mail",
+    formEmailPlaceholder: "dig@eksempel.dk",
+    formEmne: "Emne",
+    formEmnePlaceholder: "Hvad drejer det sig om? (valgfrit)",
+    formBesked: "Besked",
+    formBeskedPlaceholder: "Fortæl kort om projektet eller idéen …",
+    formSend: "Send besked",
+    formSender: "Sender …",
+    formOk: "Tak — din besked er sendt. Vi vender tilbage hurtigt.",
+    formFejl: "Noget gik galt. Prøv igen, eller skriv direkte til os.",
+    formUgyldig: "Tjek lige navn, e-mail og besked.",
+    contactOrPre: "… eller skriv direkte til ",
+
     footerLine: "© 2026 Camsilo · Danmark",
     footerCvr: "CVR-nr. 45925145 · Enkeltmandsvirksomhed",
     footerRunes: "ᚲᚨᛗᛋᛁᛚᛟ — Camsilo i ældre futhark",
@@ -129,10 +144,25 @@ export const dict = {
     contactBody: "Write to us — we reply fast.",
     contactCta: "kontakt@camsilo.dk",
 
+    formNavn: "Name",
+    formNavnPlaceholder: "Your name",
+    formEmail: "Email",
+    formEmailPlaceholder: "you@example.com",
+    formEmne: "Subject",
+    formEmnePlaceholder: "What's it about? (optional)",
+    formBesked: "Message",
+    formBeskedPlaceholder: "Tell us briefly about the project or idea …",
+    formSend: "Send message",
+    formSender: "Sending …",
+    formOk: "Thanks — your message has been sent. We'll get back to you soon.",
+    formFejl: "Something went wrong. Please try again, or email us directly.",
+    formUgyldig: "Please check your name, email and message.",
+    contactOrPre: "… or email us directly at ",
+
     footerLine: "© 2026 Camsilo · Denmark",
     footerCvr: "Company reg. (CVR) no. 45925145 · Sole proprietorship",
     footerRunes: "ᚲᚨᛗᛋᛁᛚᛟ — Camsilo in Elder Futhark",
   },
 } as const;
 
-export type Dict = (typeof dict)["da"];
+export type Dict = (typeof dict)[Lang];

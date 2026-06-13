@@ -31,9 +31,17 @@ function periodeMs(p: Periode): number {
 }
 
 export type Punkt = { label: string; visninger: number; unikke: number };
+export type Andel = { navn: string; antal: number };
+export type RealtidsHit = {
+  ts: number;
+  sti: string;
+  land?: string;
+  enhed?: string;
+};
 
 export type Oversigt = {
   periode: Periode;
+  genereretTs: number;
   visninger: number;
   visningerDelta: number | null;
   unikke: number;
@@ -42,12 +50,25 @@ export type Oversigt = {
   afvisningsrateDelta: number | null;
   gnsBesoegSek: number | null;
   gnsBesoegDelta: number | null;
+  sidesPerSession: number | null;
+  engagementProcent: number | null;
   onlineNu: number;
   serie: Punkt[];
-  topStier: { navn: string; antal: number }[];
-  topHenvisninger: { navn: string; antal: number }[];
-  topSprog: { navn: string; antal: number }[];
-  topLande: { navn: string; antal: number }[];
+  topStier: Andel[];
+  topHenvisninger: Andel[];
+  topSprog: Andel[];
+  topLande: Andel[];
+  enheder: Andel[];
+  browsere: Andel[];
+  styresystemer: Andel[];
+  indgangssider: Andel[];
+  udgangssider: Andel[];
+  /** hits pr. time-på-døgnet (UTC), 24 tal */
+  timer: number[];
+  /** seneste hits til live-feed, nyeste først */
+  realtid: RealtidsHit[];
+  /** er Google Analytics (NEXT_PUBLIC_GA_ID) konfigureret? */
+  gaKonfigureret: boolean;
 };
 
 type SessionStat = { hits: number; foerste: number; sidste: number };
@@ -179,14 +200,26 @@ export async function beregnOversigt(periode: Periode): Promise<Oversigt> {
     });
   }
 
-  // Top-lister (kun hits)
+  // Top-lister + fordelinger (kun hits)
   const stier = new Map<string, number>();
   const henvisninger = new Map<string, number>();
   const sprog = new Map<string, number>();
   const lande = new Map<string, number>();
+  const enheder = new Map<string, number>();
+  const browsere = new Map<string, number>();
+  const styresystemer = new Map<string, number>();
+  const timer = new Array(24).fill(0) as number[];
+  // session → kronologiske hit-stier (til ind-/udgangssider)
+  const sessionStier = new Map<string, { ts: number; p: string }[]>();
+
   for (const h of aktuelle) {
     if (h.t !== "hit") continue;
-    if (h.p) stier.set(h.p, (stier.get(h.p) ?? 0) + 1);
+    if (h.p) {
+      stier.set(h.p, (stier.get(h.p) ?? 0) + 1);
+      const liste = sessionStier.get(h.s);
+      if (liste) liste.push({ ts: h.ts, p: h.p });
+      else sessionStier.set(h.s, [{ ts: h.ts, p: h.p }]);
+    }
     if (h.r) {
       const navn = vaertsnavn(h.r);
       if (navn && navn !== "camsilo.dk") {
@@ -197,19 +230,48 @@ export async function beregnOversigt(periode: Periode): Promise<Oversigt> {
       const kode = h.l.slice(0, 2).toLowerCase();
       sprog.set(kode, (sprog.get(kode) ?? 0) + 1);
     }
-    if (h.c) {
-      const etiket = landeEtiket(h.c);
-      lande.set(etiket, (lande.get(etiket) ?? 0) + 1);
-    }
+    if (h.c) lande.set(landeEtiket(h.c), (lande.get(landeEtiket(h.c)) ?? 0) + 1);
+    if (h.dv) enheder.set(h.dv, (enheder.get(h.dv) ?? 0) + 1);
+    if (h.br) browsere.set(h.br, (browsere.get(h.br) ?? 0) + 1);
+    if (h.os) styresystemer.set(h.os, (styresystemer.get(h.os) ?? 0) + 1);
+    timer[new Date(h.ts).getUTCHours()]++;
   }
+
+  // Ind-/udgangssider: første og sidste hit-sti pr. session
+  const indgang = new Map<string, number>();
+  const udgang = new Map<string, number>();
+  for (const liste of sessionStier.values()) {
+    liste.sort((a, b) => a.ts - b.ts);
+    const ind = liste[0].p;
+    const ud = liste[liste.length - 1].p;
+    indgang.set(ind, (indgang.get(ind) ?? 0) + 1);
+    udgang.set(ud, (udgang.get(ud) ?? 0) + 1);
+  }
+
+  // Realtids-feed: seneste hits, nyeste først
+  const realtid: RealtidsHit[] = aktuelle
+    .filter((h) => h.t === "hit" && h.p)
+    .sort((a, b) => b.ts - a.ts)
+    .slice(0, 14)
+    .map((h) => ({
+      ts: h.ts,
+      sti: h.p as string,
+      land: h.c ? landeEtiket(h.c) : undefined,
+      enhed: h.dv,
+    }));
 
   // Online nu: sessioner med aktivitet inden for 5 min
   const graense = nu - 5 * 60_000;
   const onlineNu = new Set(aktuelle.filter((h) => h.ts >= graense).map((h) => h.s))
     .size;
 
+  const sidesPerSession = tal.unikke > 0 ? tal.visninger / tal.unikke : null;
+  const engagementProcent =
+    tal.afvisningsrate === null ? null : 100 - tal.afvisningsrate;
+
   return {
     periode,
+    genereretTs: nu,
     visninger: tal.visninger,
     visningerDelta: delta(tal.visninger, talFoer.visninger),
     unikke: tal.unikke,
@@ -218,11 +280,21 @@ export async function beregnOversigt(periode: Periode): Promise<Oversigt> {
     afvisningsrateDelta: delta(tal.afvisningsrate, talFoer.afvisningsrate),
     gnsBesoegSek: tal.gnsBesoegSek,
     gnsBesoegDelta: delta(tal.gnsBesoegSek, talFoer.gnsBesoegSek),
+    sidesPerSession,
+    engagementProcent,
     onlineNu,
     serie,
     topStier: top(stier),
     topHenvisninger: top(henvisninger),
     topSprog: top(sprog),
     topLande: top(lande),
+    enheder: top(enheder, 6),
+    browsere: top(browsere, 6),
+    styresystemer: top(styresystemer, 6),
+    indgangssider: top(indgang),
+    udgangssider: top(udgang),
+    timer,
+    realtid,
+    gaKonfigureret: Boolean(process.env.NEXT_PUBLIC_GA_ID),
   };
 }

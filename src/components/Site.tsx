@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { dict, STORAGE_KEY, type Lang } from "@/lib/i18n";
 import { LogoLockup, LogoMark } from "./Logo";
 import { KnotBand, Valknut } from "./Ornaments";
+import { KontaktForm } from "./KontaktForm";
 
 export function Site() {
   const [lang, setLang] = useState<Lang>("da");
@@ -42,6 +43,27 @@ export function Site() {
     return () => io.disconnect();
   }, []);
 
+  // Smedet fremdriftslinje: tynd glødende stribe i toppen følger scroll-dybden
+  useEffect(() => {
+    let raf = 0;
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        const h = document.documentElement;
+        const max = h.scrollHeight - h.clientHeight;
+        const p = max > 0 ? h.scrollTop / max : 0;
+        h.style.setProperty("--scroll", p.toFixed(4));
+      });
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+
   const navLinks = [
     { href: "#produkter", label: t.navProducts },
     { href: "#ydelser", label: t.navServices },
@@ -55,16 +77,20 @@ export function Site() {
         {t.skipToContent}
       </a>
 
-      {/* Atmosfære: aurora-glød + korn */}
+      {/* Smedet fremdriftslinje */}
+      <div className="scroll-progress" aria-hidden="true" />
+
+      {/* Atmosfære: aurora-glød + smedje-glød + korn */}
       <div className="aurora" aria-hidden="true">
         <div className="aurora-band aurora-a" />
         <div className="aurora-band aurora-b" />
       </div>
+      <div className="forge-glow" aria-hidden="true" />
       <div className="grain" aria-hidden="true" />
 
       <header className="nav">
         <a href="#top" className="nav-logo" aria-label="Camsilo">
-          <LogoLockup size={26} />
+          <LogoLockup size={28} uid="nav" />
         </a>
 
         <nav className={`nav-links ${menuOpen ? "open" : ""}`} aria-label="Hovedmenu">
@@ -112,7 +138,31 @@ export function Site() {
         {/* ── HERO ─────────────────────────────────────────────── */}
         <section className="hero" id="top">
           <div className="hero-watermark" aria-hidden="true">
-            <LogoMark size={560} />
+            <LogoMark size={640} uid="hero" glow bg="#0c0a08" />
+          </div>
+
+          {/* Stigende smedje-gnister */}
+          <div className="embers" aria-hidden="true">
+            {Array.from({ length: 16 }).map((_, i) => {
+              const left = (i * 61) % 100; // deterministisk spredning, ingen Math.random
+              const dur = 7 + (i % 5) * 1.6;
+              const delay = (i % 8) * 1.1;
+              const scale = 0.5 + ((i % 4) * 0.22);
+              return (
+                <span
+                  key={i}
+                  className="ember-mote"
+                  style={
+                    {
+                      left: `${left}%`,
+                      animationDuration: `${dur}s`,
+                      animationDelay: `${delay}s`,
+                      "--mote-scale": scale,
+                    } as CSSProperties
+                  }
+                />
+              );
+            })}
           </div>
 
           <p className="hero-kicker rise" style={{ animationDelay: "0.05s" }}>
@@ -274,14 +324,12 @@ export function Site() {
           </p>
           <h2 className="section-title contact-title reveal">{t.contactTitle}</h2>
           <p className="card-desc reveal">{t.contactBody}</p>
-          <a className="contact-mail reveal" href="mailto:kontakt@camsilo.dk">
-            {t.contactCta} <span aria-hidden="true">→</span>
-          </a>
+          <KontaktForm t={t} lang={lang} />
         </section>
       </main>
 
       <footer className="footer">
-        <LogoMark size={22} />
+        <LogoMark size={26} uid="foot" />
         <div className="footer-legal">
           <p>{t.footerLine}</p>
           <p className="footer-cvr">

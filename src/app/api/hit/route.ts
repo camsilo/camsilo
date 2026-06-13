@@ -3,6 +3,8 @@
  * IP bruges kun flygtigt i hukommelsen til rate-limiting.
  */
 import { gemHaendelse } from "@/lib/analytics/store";
+import { klientIp } from "@/lib/klient-ip";
+import { tolkUa } from "@/lib/ua";
 
 export const runtime = "nodejs";
 
@@ -45,8 +47,8 @@ function rateLimited(noegle: string): boolean {
 }
 
 export async function POST(req: Request): Promise<Response> {
-  const ip =
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "ukendt";
+  // Robust IP — ikke den spoofbare venstre-mest XFF-hop (se lib/klient-ip)
+  const ip = klientIp(req);
   if (rateLimited(ip)) return new Response(null, { status: 429 });
 
   let krop: unknown;
@@ -71,9 +73,22 @@ export async function POST(req: Request): Promise<Response> {
   if (p?.startsWith("/admin")) return new Response(null, { status: 204 });
 
   const c = landekode(req);
+  // Enhed/browser/OS udledes af User-Agent — kun på hits (pings er bare pulser)
+  const ua = t === "hit" ? tolkUa(req.headers.get("user-agent")) : null;
 
   try {
-    await gemHaendelse({ t, s, p, r: r || undefined, l, c, ts: Date.now() });
+    await gemHaendelse({
+      t,
+      s,
+      p,
+      r: r || undefined,
+      l,
+      c,
+      dv: ua?.enhed,
+      br: ua?.browser,
+      os: ua?.os,
+      ts: Date.now(),
+    });
   } catch (err) {
     console.error("[analytics] kunne ikke gemme hændelse:", err);
     return new Response(null, { status: 500 });

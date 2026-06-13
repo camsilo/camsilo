@@ -1,8 +1,10 @@
 # HostStack Configuration — camsilo.dk
 # Docs: https://hoststack.dev/docs/yaml-config
 #
-# Next.js 15 (App Router), rent statisk one-page site — ingen database,
-# ingen secrets. `next start` lytter på $PORT som HostStack injicerer.
+# Next.js 15 (App Router). Forsiden er statisk, men der er nu også en
+# /admin (analytics + kontaktbeskeder) og et /api/kontakt-endpoint, der
+# skriver beskeder til en JSON-store under DATA_DIR. `next start` lytter
+# på $PORT som HostStack injicerer.
 
 services:
   web:
@@ -19,7 +21,36 @@ services:
       interval: 10
       timeout: 5
     scaling:
+      # Persistent disk + in-proces fil-store binder servicen til én instans.
+      # Hold min:1/max:1, ellers deles beskeder/analytics ikke på tværs.
       min: 1
       max: 1
+
+    # ── KRITISK før drift: PERSISTENT DISK ──────────────────────────────────
+    # Uden en monteret disk ligger ./data på containerens FLYGTIGE filsystem og
+    # NULSTILLES ved hver redeploy/restart — dvs. modtagne kontaktbeskeder (og
+    # analytics) forsvinder lydløst. Tilføj en disk og sæt DATA_DIR til samme
+    # mountPath. VERIFICÉR HostStacks præcise disk-syntaks i deres docs før du
+    # afkommenterer (et forkert gæt kan vælte deployet):
+    #
+    # disks:
+    #   - name: camsilo-data
+    #     mountPath: /app/data
+    #     sizeGB: 1
+
     env:
       NODE_ENV: production
+      # Når disken ovenfor er monteret, peg data-laget derhen, så beskeder
+      # overlever redeploys:
+      # DATA_DIR: /app/data
+      #
+      # PÅKRÆVEDE SECRETS (sæt i dashboardet/CLI, ALDRIG i denne fil) — uden dem
+      # kan /admin ikke bruges: ADMIN_PASSWORD afvises (login fejler), og
+      # AUTH_SECRET-manglen får appen til at kaste ved cookie-tjek i prod:
+      #   hoststack env set <service-id> ADMIN_PASSWORD=<stærk adgangskode> --secret
+      #   hoststack env set <service-id> AUTH_SECRET=<openssl rand -base64 48> --secret
+      #
+      # VALGFRIT — notifikation ved nye beskeder (så de ikke kun ligger i admin).
+      # Sættes der en webhook-URL (fx Slack/Discord/Make/Zapier), POSTer
+      # /api/kontakt en kopi af beskeden dertil (best-effort, blokerer ikke svaret):
+      #   hoststack env set <service-id> KONTAKT_WEBHOOK_URL=https://... --secret

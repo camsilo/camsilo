@@ -32,27 +32,58 @@ export function KnotBand() {
 }
 
 /**
- * Valknut — Odins tegn: tre sammenflettede trekanter (borromæisk). Tre
- * ligesidede trekanter med spids opad, hvis centre selv danner en lille
- * trekant, så de griber ind i hinanden. Rene rette linjer.
+ * Valknut — Odins tegn: tre sammenflettede trekanter i borromæisk form (ingen to
+ * er direkte låst — fjern én, og de andre falder fra hinanden). Geometrien er
+ * overført 1:1 fra Wikimedia Commons' "Valknut-Symbol-borromean.svg" og
+ * normaliseret til et 100×100-felt: tre kongruente, opadvendte ligesidede
+ * trekanter hvis centre sidder i en triade 120° fra hinanden.
+ *
+ * Vævningen er ægte over/under. Trekanterne tegnes a→b→c (c øverst overalt),
+ * hvorefter to lapper — A's venstre kant og et stykke af B's højre kant — lægges
+ * tilbage ovenpå, præcis som original-SVG'en, så krydsene veksler korrekt. I én
+ * farve vises over/under via mørke "casings", der skærer et rent gab ved hvert
+ * kryds, ligesom i logomærket.
  */
-function trekant(cx: number, cy: number, R: number): string {
-  const p = (a: number) => {
-    const rad = (a * Math.PI) / 180;
-    return `${(cx + R * Math.cos(rad)).toFixed(2)} ${(cy + R * Math.sin(rad)).toFixed(2)}`;
-  };
-  // spidser ved -90° (top), 30° (ned-højre), 150° (ned-venstre)
-  return `${p(-90)} ${p(30)} ${p(150)}`;
-}
+const TRI_A: [number, number][] = [
+  [29.0, 77.29],
+  [92.01, 77.29],
+  [60.5, 22.71],
+];
+const TRI_B: [number, number][] = [
+  [7.99, 89.41],
+  [71.0, 89.41],
+  [39.5, 34.84],
+];
+const TRI_C: [number, number][] = [
+  [7.99, 65.16],
+  [71.0, 65.16],
+  [39.5, 10.59],
+];
+const PATCH_A: [number, number][] = [
+  [60.5, 22.71],
+  [29.0, 77.29],
+]; // A's venstre kant (spids → nederste venstre hjørne)
+const PATCH_B: [number, number][] = [
+  [39.5, 34.84],
+  [51.05, 54.85],
+]; // stykke af B's højre kant fra spidsen
 
-export function Valknut({ size = 220 }: { size?: number }) {
-  const R = 32;
-  const d = 14; // hvor langt hvert trekant-center sidder fra figurens midte
-  const c = (a: number): [number, number] => {
-    const rad = (a * Math.PI) / 180;
-    return [50 + d * Math.cos(rad), 50 + d * Math.sin(rad)];
-  };
-  const centres: [number, number][] = [c(-90), c(30), c(150)];
+const triPath = (p: [number, number][]) =>
+  `M${p[0][0]} ${p[0][1]}L${p[1][0]} ${p[1][1]}L${p[2][0]} ${p[2][1]}Z`;
+const segPath = (p: [number, number][]) =>
+  `M${p[0][0]} ${p[0][1]}L${p[1][0]} ${p[1][1]}`;
+
+export function Valknut({
+  size = 220,
+  bg = "var(--bg)",
+}: {
+  size?: number;
+  bg?: string;
+}) {
+  const W = 6; // båndbredde
+  const CASE = 9.6; // mørk casing → rent over/under-gab
+  const tris = [TRI_A, TRI_B, TRI_C];
+  const patches = [PATCH_A, PATCH_B];
   return (
     <svg
       width={size}
@@ -62,15 +93,20 @@ export function Valknut({ size = 220 }: { size?: number }) {
       aria-hidden="true"
       className="valknut"
     >
-      {centres.map(([cx, cy], i) => (
-        <polygon
-          key={i}
-          points={trekant(cx, cy, R)}
-          stroke="currentColor"
-          strokeWidth="2.4"
-          strokeLinejoin="miter"
-        />
-      ))}
+      <g strokeLinejoin="miter" strokeMiterlimit={8}>
+        {tris.map((p, i) => (
+          <g key={i}>
+            <path d={triPath(p)} stroke={bg} strokeWidth={CASE} />
+            <path d={triPath(p)} stroke="currentColor" strokeWidth={W} />
+          </g>
+        ))}
+        {patches.map((p, i) => (
+          <g key={i}>
+            <path d={segPath(p)} stroke={bg} strokeWidth={CASE} strokeLinecap="butt" />
+            <path d={segPath(p)} stroke="currentColor" strokeWidth={W} strokeLinecap="butt" />
+          </g>
+        ))}
+      </g>
     </svg>
   );
 }

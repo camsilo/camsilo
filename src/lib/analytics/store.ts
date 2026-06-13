@@ -20,6 +20,12 @@ export type Haendelse = {
   l?: string;
   /** landekode (ISO-3166-1 alpha-2), udledt på serveren fra geo-header — aldrig IP */
   c?: string;
+  /** enhedstype (Computer/Mobil/Tablet) — udledt af User-Agent på serveren */
+  dv?: string;
+  /** browser — udledt af User-Agent */
+  br?: string;
+  /** styresystem — udledt af User-Agent */
+  os?: string;
   /** epoch-ms (sættes på serveren) */
   ts: number;
 };

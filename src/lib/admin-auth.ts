@@ -33,6 +33,12 @@ export function kodeordKorrekt(input: string): boolean {
   return sikkerSammenligning(input, facit);
 }
 
+/** Brugernavn er ikke hemmeligt — default "camsilo", kan overstyres via ADMIN_USERNAME. */
+export function brugernavnKorrekt(input: string): boolean {
+  const facit = process.env.ADMIN_USERNAME ?? "camsilo";
+  return input.trim().toLowerCase() === facit.trim().toLowerCase();
+}
+
 export async function erAdmin(): Promise<boolean> {
   const jar = await cookies();
   const c = jar.get(COOKIE)?.value;
