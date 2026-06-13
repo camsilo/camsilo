@@ -178,13 +178,21 @@ export default async function AdminSide({
           />
         </div>
         <div className="admin-panel">
+          <h2>Lande</h2>
+          <TopListe
+            poster={o.topLande}
+            tomTekst="Ingen geo-data — hosten beriger ikke med landekode."
+          />
+        </div>
+        <div className="admin-panel">
           <h2>Sprog</h2>
           <TopListe poster={o.topSprog} tomTekst="Ingen data endnu." />
         </div>
       </section>
 
       <p className="admin-fodnote">
-        First-party analytics — cookieløs, ingen IP-lagring. Data ligger som
+        First-party analytics — cookieløs, ingen IP-lagring. Land udledes af
+        hostens geo-header ved kanten, ikke af en gemt IP. Data ligger som
         NDJSON under <code>DATA_DIR</code> (flygtigt indtil en persistent disk
         tilkøbes).
       </p>

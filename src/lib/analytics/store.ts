@@ -18,6 +18,8 @@ export type Haendelse = {
   r?: string;
   /** browsersprog */
   l?: string;
+  /** landekode (ISO-3166-1 alpha-2), udledt på serveren fra geo-header — aldrig IP */
+  c?: string;
   /** epoch-ms (sættes på serveren) */
   ts: number;
 };

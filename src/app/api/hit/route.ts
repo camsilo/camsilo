@@ -10,6 +10,28 @@ const VINDUE_MS = 60_000;
 const MAKS_PR_VINDUE = 120;
 const taeller = new Map<string, { n: number; start: number }>();
 
+/**
+ * Landekode fra en geo-header, hvis platformen leverer en. Vi læser KUN den
+ * færdige 2-bogstavs landekode (proxyen udleder den af IP'en ved kanten) —
+ * selve IP'en gemmes aldrig. Tom hvis hosten ikke beriger med geo.
+ */
+const GEO_HEADERE = [
+  "cf-ipcountry", // Cloudflare
+  "x-vercel-ip-country", // Vercel
+  "x-geo-country",
+  "x-country-code",
+  "fastly-geo-country",
+  "x-appengine-country",
+];
+
+function landekode(req: Request): string | undefined {
+  for (const h of GEO_HEADERE) {
+    const v = req.headers.get(h)?.trim().toUpperCase();
+    if (v && /^[A-Z]{2}$/.test(v) && v !== "XX" && v !== "T1") return v;
+  }
+  return undefined;
+}
+
 function rateLimited(noegle: string): boolean {
   const nu = Date.now();
   const post = taeller.get(noegle);
@@ -48,8 +70,10 @@ export async function POST(req: Request): Promise<Response> {
   // Admin-sider spores ikke
   if (p?.startsWith("/admin")) return new Response(null, { status: 204 });
 
+  const c = landekode(req);
+
   try {
-    await gemHaendelse({ t, s, p, r: r || undefined, l, ts: Date.now() });
+    await gemHaendelse({ t, s, p, r: r || undefined, l, c, ts: Date.now() });
   } catch (err) {
     console.error("[analytics] kunne ikke gemme hændelse:", err);
     return new Response(null, { status: 500 });

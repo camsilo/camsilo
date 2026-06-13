@@ -47,6 +47,7 @@ export type Oversigt = {
   topStier: { navn: string; antal: number }[];
   topHenvisninger: { navn: string; antal: number }[];
   topSprog: { navn: string; antal: number }[];
+  topLande: { navn: string; antal: number }[];
 };
 
 type SessionStat = { hits: number; foerste: number; sidste: number };
@@ -108,6 +109,29 @@ function dansk(d: Date, periode: Periode): string {
   });
 }
 
+const landeNavne = (() => {
+  try {
+    return new Intl.DisplayNames(["da"], { type: "region" });
+  } catch {
+    return null;
+  }
+})();
+
+/** "DK" → "🇩🇰 Danmark" (flag-emoji bygges af regional-indicator-symboler). */
+function landeEtiket(kode: string): string {
+  const k = kode.toUpperCase();
+  let navn = k;
+  try {
+    navn = landeNavne?.of(k) ?? k;
+  } catch {
+    navn = k;
+  }
+  const flag = /^[A-Z]{2}$/.test(k)
+    ? String.fromCodePoint(...[...k].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65))
+    : "";
+  return flag ? `${flag} ${navn}` : navn;
+}
+
 function vaertsnavn(r: string): string | null {
   try {
     const u = new URL(r);
@@ -159,6 +183,7 @@ export async function beregnOversigt(periode: Periode): Promise<Oversigt> {
   const stier = new Map<string, number>();
   const henvisninger = new Map<string, number>();
   const sprog = new Map<string, number>();
+  const lande = new Map<string, number>();
   for (const h of aktuelle) {
     if (h.t !== "hit") continue;
     if (h.p) stier.set(h.p, (stier.get(h.p) ?? 0) + 1);
@@ -171,6 +196,10 @@ export async function beregnOversigt(periode: Periode): Promise<Oversigt> {
     if (h.l) {
       const kode = h.l.slice(0, 2).toLowerCase();
       sprog.set(kode, (sprog.get(kode) ?? 0) + 1);
+    }
+    if (h.c) {
+      const etiket = landeEtiket(h.c);
+      lande.set(etiket, (lande.get(etiket) ?? 0) + 1);
     }
   }
 
@@ -194,5 +223,6 @@ export async function beregnOversigt(periode: Periode): Promise<Oversigt> {
     topStier: top(stier),
     topHenvisninger: top(henvisninger),
     topSprog: top(sprog),
+    topLande: top(lande),
   };
 }
