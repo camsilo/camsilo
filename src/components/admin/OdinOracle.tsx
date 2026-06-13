@@ -152,15 +152,7 @@ export default function OdinOracle({
   const sidevisninger = heltal.format(visninger);
 
   return (
-    <header
-      className="hud-panel hud-panel-accent"
-      style={{
-        display: "grid",
-        gridTemplateColumns: "minmax(0, 1.5fr) minmax(0, 1fr)",
-        gap: "clamp(20px, 3vw, 40px)",
-        alignItems: "stretch",
-      }}
-    >
+    <header className="hud-panel hud-panel-accent odin-orakel">
       {/* ── VENSTRE: brand, segl, ravne ─────────────────────────── */}
       <div
         style={{
@@ -275,14 +267,13 @@ export default function OdinOracle({
 
       {/* ── HØJRE: live-ur + rige-status ────────────────────────── */}
       <div
+        className="odin-orakel-hoejre"
         style={{
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
           gap: "14px",
           minWidth: 0,
-          borderLeft: "1px solid var(--hud-line-soft)",
-          paddingLeft: "clamp(16px, 2.4vw, 32px)",
         }}
       >
         {/* Live-ur */}

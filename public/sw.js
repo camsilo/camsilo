@@ -6,7 +6,7 @@
 //   - Statiske assets (ikoner): cache-first.
 //   - Alt under /api/ og alle ikke-GET requests: røres ALDRIG (rent netværk).
 
-const CACHE_NAME = "camsilo-v1";
+const CACHE_NAME = "camsilo-v2";
 
 // Hvad vi forhåndscacher ved install (kun helt statiske ting).
 const STATIC_ASSETS = [
@@ -45,6 +45,47 @@ self.addEventListener("activate", (event) => {
         // Ignorér — oprydning er ikke kritisk.
       }
       await self.clients.claim();
+    })(),
+  );
+});
+
+// ── Push-notifikationer ──────────────────────────────────────
+self.addEventListener("push", (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch (err) {
+    data = {};
+  }
+  const titel = data.titel || "Camsilo";
+  const krop = data.krop || "Ny aktivitet i admin";
+  const url = data.url || "/admin";
+  event.waitUntil(
+    self.registration.showNotification(titel, {
+      body: krop,
+      icon: "/icons/icon-192.png",
+      badge: "/icons/icon-192.png",
+      data: { url },
+      tag: "camsilo-admin",
+      renotify: true,
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url =
+    (event.notification.data && event.notification.data.url) || "/admin";
+  event.waitUntil(
+    (async () => {
+      const alle = await self.clients.matchAll({
+        type: "window",
+        includeUncontrolled: true,
+      });
+      for (const c of alle) {
+        if (c.url.includes("/admin") && "focus" in c) return c.focus();
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(url);
     })(),
   );
 });

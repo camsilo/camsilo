@@ -8,6 +8,7 @@
 import { gemBesked } from "@/lib/messages/store";
 import { klientIp } from "@/lib/klient-ip";
 import { notificerWebhook } from "@/lib/discord";
+import { sendPush } from "@/lib/push/send";
 
 export const runtime = "nodejs";
 
@@ -147,6 +148,11 @@ export async function POST(req: Request): Promise<Response> {
   }
 
   notificer({ navn, email, emne: emne || undefined, besked, land });
+  sendPush(
+    "📨 Ny besked via camsilo.dk",
+    `Fra ${navn}${emne ? ` · ${emne}` : ""}`,
+    "/admin?vis=beskeder",
+  );
 
   return Response.json({ ok: true });
 }

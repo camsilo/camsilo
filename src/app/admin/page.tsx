@@ -16,6 +16,7 @@ import {
 } from "@/lib/poststack";
 import { AdminBeskeder } from "@/components/AdminBeskeder";
 import { AdminEmail } from "@/components/AdminEmail";
+import { AdminPWA } from "@/components/admin/AdminPWA";
 import { LogoMark } from "@/components/Logo";
 import OdinOracle from "@/components/admin/OdinOracle";
 import { OdinKpi } from "@/components/admin/OdinKpi";
@@ -224,6 +225,7 @@ export default async function AdminSide({
                 ))}
               </nav>
             )}
+            <AdminPWA />
             <form action={adminLogoutAction}>
               <button className="admin-knap" type="submit">
                 Log ud

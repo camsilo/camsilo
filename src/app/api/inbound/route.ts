@@ -6,6 +6,7 @@
  * Beskyttet med en hemmelig token i URL'en (?token=…) mod INBOUND_WEBHOOK_TOKEN.
  */
 import { notificerWebhook } from "@/lib/discord";
+import { sendPush } from "@/lib/push/send";
 
 export const runtime = "nodejs";
 
@@ -68,6 +69,7 @@ export async function POST(req: Request): Promise<Response> {
     "",
     "→ Læs & svar i admin: camsilo.dk/admin?vis=email",
   ]);
+  sendPush(`📥 Ny e-mail · ${emne}`, `Fra ${fra}`, "/admin?vis=email");
 
   return new Response(null, { status: 200 });
 }
