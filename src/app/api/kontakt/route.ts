@@ -7,6 +7,7 @@
  */
 import { gemBesked } from "@/lib/messages/store";
 import { klientIp } from "@/lib/klient-ip";
+import { notificerWebhook } from "@/lib/discord";
 
 export const runtime = "nodejs";
 
@@ -64,11 +65,7 @@ function tekst(v: unknown, maks: number): string {
   return typeof v === "string" ? v.trim().slice(0, maks) : "";
 }
 
-/**
- * Valgfri notifikation: hvis KONTAKT_WEBHOOK_URL er sat, sendes en kopi af
- * beskeden dertil (Slack/Discord/Make/Zapier). Fire-and-forget med timeout —
- * må aldrig blokere eller vælte svaret til afsenderen.
- */
+/** Valgfri notifikation til KONTAKT_WEBHOOK_URL (Discord/Slack/…) — se lib/discord. */
 function notificer(b: {
   navn: string;
   email: string;
@@ -76,37 +73,13 @@ function notificer(b: {
   besked: string;
   land?: string;
 }): void {
-  const url = process.env.KONTAKT_WEBHOOK_URL;
-  if (!url) return;
-  const linjer = [
-    "📨 **Ny besked via camsilo.dk**",
+  notificerWebhook("📨 **Ny besked via camsilo.dk**", [
     `Fra: ${b.navn} <${b.email}>`,
-    b.emne ? `Emne: ${b.emne}` : null,
-    b.land ? `Land: ${b.land}` : null,
+    b.emne ? `Emne: ${b.emne}` : "",
+    b.land ? `Land: ${b.land}` : "",
     "",
     b.besked,
-  ]
-    .filter((l) => l !== null)
-    .join("\n");
-  // Provider-specifik form: Discord bruger `content`, Slack `text`; ellers begge + felter.
-  let krop: string;
-  if (/discord(app)?\.com\/api\/webhooks/i.test(url)) {
-    krop = JSON.stringify({ username: "Camsilo", content: linjer.slice(0, 1900) });
-  } else if (/hooks\.slack\.com/i.test(url)) {
-    krop = JSON.stringify({ text: linjer });
-  } else {
-    krop = JSON.stringify({ text: linjer, content: linjer, ...b });
-  }
-  const ac = new AbortController();
-  const timer = setTimeout(() => ac.abort(), 4000);
-  fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: krop,
-    signal: ac.signal,
-  })
-    .catch(() => {})
-    .finally(() => clearTimeout(timer));
+  ]);
 }
 
 export async function POST(req: Request): Promise<Response> {
