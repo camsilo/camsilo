@@ -153,7 +153,9 @@ export default async function AdminSide({
       <div className="odin-wrap">
         {/* ── Topbjælke ──────────────────────────────────────────── */}
         <header className="admin-top">
-          <LogoMark size={26} uid="adm" />
+          <Link href="/" className="admin-logo-link" aria-label="Til forsiden" title="Til forsiden">
+            <LogoMark size={26} uid="adm" />
+          </Link>
           <div>
             <h1>ODIN</h1>
             <span className="admin-undertitel">camsilo.dk · kommandocenter</span>

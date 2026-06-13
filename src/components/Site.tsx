@@ -9,6 +9,7 @@ import { KontaktForm } from "./KontaktForm";
 export function Site() {
   const [lang, setLang] = useState<Lang>("da");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [erAdmin, setErAdmin] = useState(false);
   const t = dict[lang];
 
   useEffect(() => {
@@ -17,6 +18,14 @@ export function Site() {
       setLang(saved);
       document.documentElement.lang = saved;
     }
+  }, []);
+
+  // Er denne browser logget ind som admin? Styrer kun visningen af genvejs-knappen.
+  useEffect(() => {
+    fetch("/api/admin-status", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setErAdmin(Boolean(d?.admin)))
+      .catch(() => {});
   }, []);
 
   function switchLang(next: Lang) {
@@ -341,6 +350,16 @@ export function Site() {
           ᚲᚨᛗᛋᛁᛚᛟ
         </p>
       </footer>
+
+      {/* Admin-genvej — vises kun når browseren er logget ind som admin */}
+      {erAdmin && (
+        <a href="/admin" className="admin-genvej" aria-label="Tilbage til admin">
+          <span className="admin-genvej-rune" aria-hidden="true">
+            ᚨ
+          </span>
+          Admin
+        </a>
+      )}
     </>
   );
 }

@@ -1759,6 +1759,50 @@ a.product-card:hover {
   }
 }
 
+/* ── Admin-logo som forside-link + flydende admin-genvej ────── */
+.admin-logo-link {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 3px;
+  transition: opacity 0.2s, filter 0.2s;
+}
+.admin-logo-link:hover {
+  opacity: 0.82;
+  filter: drop-shadow(0 0 10px rgba(242, 106, 27, 0.4));
+}
+
+/* Flydende "tilbage til admin"-knap på forsiden — kun synlig for admins */
+.admin-genvej {
+  position: fixed;
+  right: clamp(16px, 3vw, 28px);
+  bottom: clamp(16px, 3vw, 28px);
+  z-index: 60;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 18px;
+  font-family: var(--font-mono), monospace;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--on-ember);
+  background: linear-gradient(135deg, var(--ember-light), var(--ember) 55%, var(--ember-deep));
+  border-radius: 999px;
+  box-shadow:
+    0 8px 28px -8px rgba(242, 106, 27, 0.6),
+    inset 0 1px 0 rgba(255, 230, 200, 0.3);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.admin-genvej:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 40px -10px rgba(242, 106, 27, 0.7);
+}
+.admin-genvej-rune {
+  font-size: 15px;
+  line-height: 1;
+  text-shadow: 0 0 10px rgba(255, 220, 180, 0.6);
+}
+
 /* ══════════════════════════════════════════════════════════════
    ODIN — kommandocenter-HUD (admin)
    Smedet rune-HUD: glødende paneler m. hjørnebeslag, gitter, scanlines,
