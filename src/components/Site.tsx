@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { dict, STORAGE_KEY, type Lang } from "@/lib/i18n";
 import { LogoLockup, LogoMark } from "./Logo";
+import { KnotBand, Valknut } from "./Ornaments";
 
 export function Site() {
   const [lang, setLang] = useState<Lang>("da");
@@ -159,7 +160,12 @@ export function Site() {
 
         {/* ── PRODUKTER ────────────────────────────────────────── */}
         <section className="section" id="produkter">
-          <p className="section-label reveal">{t.productsLabel}</p>
+          <p className="section-label reveal">
+            <span className="label-rune" title="fehu — rigdom, frembragt værdi" aria-hidden="true">
+              ᚠ
+            </span>
+            {t.productsLabel}
+          </p>
           <h2 className="section-title reveal">{t.productsTitle}</h2>
 
           <div className="product-grid">
@@ -191,9 +197,17 @@ export function Site() {
           </div>
         </section>
 
+        {/* ── Fletværk ─────────────────────────────────────────── */}
+        <KnotBand />
+
         {/* ── YDELSER ──────────────────────────────────────────── */}
         <section className="section" id="ydelser">
-          <p className="section-label reveal">{t.servicesLabel}</p>
+          <p className="section-label reveal">
+            <span className="label-rune" title="raido — rejse, færd, håndværk i bevægelse" aria-hidden="true">
+              ᚱ
+            </span>
+            {t.servicesLabel}
+          </p>
           <h2 className="section-title reveal">{t.servicesTitle}</h2>
 
           <div className="service-grid">
@@ -218,7 +232,12 @@ export function Site() {
 
         {/* ── OM ───────────────────────────────────────────────── */}
         <section className="section" id="om">
-          <p className="section-label reveal">{t.aboutLabel}</p>
+          <p className="section-label reveal">
+            <span className="label-rune" title="mannaz — mennesket, fællesskabet bag værket" aria-hidden="true">
+              ᛗ
+            </span>
+            {t.aboutLabel}
+          </p>
           <h2 className="section-title reveal">{t.aboutTitle}</h2>
           <p className="about-body reveal">{t.aboutBody}</p>
 
@@ -239,9 +258,20 @@ export function Site() {
           </div>
         </section>
 
+        {/* ── Fletværk ─────────────────────────────────────────── */}
+        <KnotBand />
+
         {/* ── KONTAKT ──────────────────────────────────────────── */}
         <section className="section section-contact" id="kontakt">
-          <p className="section-label reveal">{t.contactLabel}</p>
+          <div className="contact-valknut" aria-hidden="true">
+            <Valknut size={260} />
+          </div>
+          <p className="section-label reveal">
+            <span className="label-rune" title="gebo — gave, gæstfrihed, udveksling" aria-hidden="true">
+              ᚷ
+            </span>
+            {t.contactLabel}
+          </p>
           <h2 className="section-title contact-title reveal">{t.contactTitle}</h2>
           <p className="card-desc reveal">{t.contactBody}</p>
           <a className="contact-mail reveal" href="mailto:kontakt@camsilo.dk">
