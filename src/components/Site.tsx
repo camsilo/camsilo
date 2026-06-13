@@ -111,6 +111,14 @@ export function Site() {
         </nav>
 
         <div className="nav-right">
+          {erAdmin && (
+            <a href="/admin" className="nav-admin" aria-label="Til admin">
+              <span className="rune-accent" aria-hidden="true">
+                ᚨ
+              </span>
+              Admin
+            </a>
+          )}
           <div className="lang-switch" role="group" aria-label="Sprog / Language">
             <button
               type="button"
@@ -351,15 +359,6 @@ export function Site() {
         </p>
       </footer>
 
-      {/* Admin-genvej — vises kun når browseren er logget ind som admin */}
-      {erAdmin && (
-        <a href="/admin" className="admin-genvej" aria-label="Tilbage til admin">
-          <span className="admin-genvej-rune" aria-hidden="true">
-            ᚨ
-          </span>
-          Admin
-        </a>
-      )}
     </>
   );
 }

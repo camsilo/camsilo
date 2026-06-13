@@ -35,6 +35,9 @@
 html {
   scroll-behavior: smooth;
   scroll-padding-top: calc(var(--nav-h) + 16px);
+  /* Klip vandret overflow fra atmosfære-lagene (aurora/forge-glow er brede) —
+     clip rører ikke lodret scroll, så siden ikke kan trækkes sidelæns. */
+  overflow-x: clip;
 }
 
 body {
@@ -1003,6 +1006,27 @@ a.product-card:hover {
     display: flex;
   }
 
+  /* Stram nav-baren så Admin + sprog + burger får plads (ingen klipning) */
+  .nav {
+    padding: 0 10px;
+    gap: 8px;
+  }
+  .nav-right {
+    gap: 8px;
+  }
+  .nav-admin {
+    padding: 5px 10px;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+  }
+  .logo-word {
+    font-size: 13.5px;
+    letter-spacing: 0.13em;
+  }
+  .lang-switch {
+    font-size: 12px;
+  }
+
   .hero-watermark {
     animation: none;
     opacity: 0.28;
@@ -1879,36 +1903,27 @@ a.product-card:hover {
   filter: drop-shadow(0 0 10px rgba(242, 106, 27, 0.4));
 }
 
-/* Flydende "tilbage til admin"-knap på forsiden — kun synlig for admins */
-.admin-genvej {
-  position: fixed;
-  right: clamp(16px, 3vw, 28px);
-  bottom: clamp(16px, 3vw, 28px);
-  z-index: 60;
+/* "Admin"-genvej i top-menuen — kun synlig for admins (klient-tjek) */
+.nav-admin {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 11px 18px;
+  gap: 6px;
+  padding: 6px 14px;
   font-family: var(--font-mono), monospace;
-  font-size: 13px;
-  letter-spacing: 0.12em;
+  font-size: 12px;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--on-ember);
-  background: linear-gradient(135deg, var(--ember-light), var(--ember) 55%, var(--ember-deep));
+  color: var(--ember);
+  border: 1px solid rgba(242, 106, 27, 0.4);
   border-radius: 999px;
-  box-shadow:
-    0 8px 28px -8px rgba(242, 106, 27, 0.6),
-    inset 0 1px 0 rgba(255, 230, 200, 0.3);
-  transition: transform 0.2s, box-shadow 0.2s;
+  white-space: nowrap;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
 }
-.admin-genvej:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 14px 40px -10px rgba(242, 106, 27, 0.7);
-}
-.admin-genvej-rune {
-  font-size: 15px;
-  line-height: 1;
-  text-shadow: 0 0 10px rgba(255, 220, 180, 0.6);
+.nav-admin:hover {
+  background: var(--ember);
+  color: var(--on-ember);
+  border-color: var(--ember);
+  box-shadow: 0 4px 18px -6px rgba(242, 106, 27, 0.55);
 }
 
 /* ══════════════════════════════════════════════════════════════
