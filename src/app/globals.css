@@ -702,6 +702,342 @@ a.product-card:hover {
   }
 }
 
+/* ── Admin (/admin) ─────────────────────────────────────────── */
+
+.admin,
+.admin-login {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 30px 20px 80px;
+}
+
+.admin-login {
+  max-width: 360px;
+  margin-top: 18vh;
+  text-align: center;
+}
+
+.admin-login-maerke {
+  color: var(--ink);
+  margin-bottom: 24px;
+}
+
+.admin-login h1 {
+  font-size: 19px;
+  letter-spacing: 0.2em;
+  margin-bottom: 6px;
+}
+
+.admin-login-note {
+  font-family: var(--font-mono), monospace;
+  font-size: 12.5px;
+  color: var(--faint);
+  margin-bottom: 26px;
+}
+
+.admin-login form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-felt {
+  width: 100%;
+  padding: 11px 14px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--ink);
+  font: inherit;
+}
+
+.admin-felt:focus {
+  outline: none;
+  border-color: var(--ice);
+}
+
+.admin-knap {
+  padding: 9px 16px;
+  font-family: var(--font-mono), monospace;
+  font-size: 12.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: none;
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.admin-knap:hover {
+  border-color: var(--ice);
+  color: var(--ice);
+}
+
+.admin-knap-primaer {
+  background: var(--ice);
+  border-color: var(--ice);
+  color: #06221e;
+}
+
+.admin-knap-primaer:hover {
+  background: #97e8de;
+  color: #06221e;
+}
+
+.admin-fejl {
+  color: #e08a7f;
+  font-size: 14px;
+  margin-top: 14px;
+}
+
+.admin-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding-bottom: 20px;
+  margin-bottom: 22px;
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-top h1 {
+  font-size: 16px;
+  letter-spacing: 0.18em;
+}
+
+.admin-undertitel {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  color: var(--faint);
+}
+
+.admin-top-hoejre {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.admin-online {
+  font-family: var(--font-mono), monospace;
+  font-size: 12.5px;
+  color: var(--dim);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.admin-online-prik {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ice);
+  box-shadow: 0 0 8px rgba(127, 224, 212, 0.7);
+}
+
+.admin-perioder {
+  display: flex;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.admin-perioder a {
+  padding: 8px 14px;
+  font-family: var(--font-mono), monospace;
+  font-size: 12.5px;
+  color: var(--dim);
+  border-right: 1px solid var(--line);
+  transition: background 0.15s, color 0.15s;
+}
+
+.admin-perioder a:last-child {
+  border-right: none;
+}
+
+.admin-perioder a:hover {
+  color: var(--ink);
+}
+
+.admin-perioder a.aktiv {
+  background: var(--ice);
+  color: #06221e;
+}
+
+.kpi-net {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.kpi-kort {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+}
+
+.kpi-navn {
+  font-family: var(--font-mono), monospace;
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+  margin-bottom: 10px;
+}
+
+.kpi-tal {
+  font-family: var(--font-display), sans-serif;
+  font-weight: 700;
+  font-size: clamp(24px, 2.6vw, 34px);
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.kpi-delta {
+  font-family: var(--font-mono), monospace;
+  font-size: 12.5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.kpi-god {
+  color: #8fe3b0;
+  background: rgba(110, 220, 160, 0.12);
+}
+
+.kpi-daarlig {
+  color: #e08a7f;
+  background: rgba(224, 138, 127, 0.12);
+}
+
+.kpi-neutral {
+  color: var(--faint);
+}
+
+.admin-panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 18px;
+}
+
+.admin-panel h2 {
+  font-size: 15px;
+  letter-spacing: 0.05em;
+  margin-bottom: 16px;
+}
+
+.admin-panel-hoved {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.admin-utc {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  color: var(--faint);
+  font-weight: 400;
+}
+
+.graf-forklaring {
+  display: flex;
+  gap: 18px;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  color: var(--dim);
+}
+
+.graf-forklaring .prik {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+.prik-blaa {
+  background: #7fb1ff;
+}
+
+.prik-is {
+  background: var(--ice);
+}
+
+.admin-net {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.top-liste {
+  list-style: none;
+}
+
+.top-liste li {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px;
+  font-size: 14px;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.top-bjaelke {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: rgba(127, 224, 212, 0.08);
+  border-right: 2px solid rgba(127, 224, 212, 0.35);
+}
+
+.top-navn {
+  position: relative;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.top-antal {
+  position: relative;
+  font-family: var(--font-mono), monospace;
+  font-size: 12.5px;
+  color: var(--dim);
+}
+
+.admin-tom {
+  color: var(--faint);
+  font-size: 14px;
+}
+
+.admin-fodnote {
+  font-family: var(--font-mono), monospace;
+  font-size: 11.5px;
+  color: var(--faint);
+  margin-top: 8px;
+}
+
+@media (max-width: 900px) {
+  .kpi-net {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .admin-net {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ── Reduceret bevægelse ────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {

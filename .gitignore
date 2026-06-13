@@ -23,3 +23,7 @@ npm-debug.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# analytics-data (lokal dev) — bevidst /data/ med skråstreger,
+# så fx en fremtidig src/lib/data/ ikke rammes
+/data/

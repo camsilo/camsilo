@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Unbounded, Schibsted_Grotesk, Fragment_Mono } from "next/font/google";
+import { Sporing } from "@/components/Sporing";
 import "./globals.css";
 
 const display = Unbounded({
@@ -44,7 +45,10 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="da" className={`${display.variable} ${body.variable} ${mono.variable}`}>
-      <body>{children}</body>
+      <body>
+        {children}
+        <Sporing />
+      </body>
     </html>
   );
 }
