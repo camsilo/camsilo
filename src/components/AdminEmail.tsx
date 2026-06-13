@@ -1,14 +1,14 @@
 "use client";
 
-import { useRef, useState } from "react";
-import type { IndgaaendeMail } from "@/lib/poststack";
+import { useMemo, useRef, useState } from "react";
+import type { Afsender, IndgaaendeMail } from "@/lib/poststack";
 import { hentMailAction, sendMailAction } from "@/app/admin/actions";
 
 type Props = {
   mails: IndgaaendeMail[];
   konfigureret: boolean;
   fejl?: string;
-  mailAdresse: string;
+  adresser: Afsender[];
 };
 
 const fmtDato = new Intl.DateTimeFormat("da-DK", {
@@ -51,17 +51,25 @@ function brodtekst(m: IndgaaendeMail): string {
 
 type SendStatus = "idle" | "sender" | "ok" | "fejl";
 
-export function AdminEmail({ mails, konfigureret, fejl, mailAdresse }: Props) {
+export function AdminEmail({ mails, konfigureret, fejl, adresser }: Props) {
   const [aaben, setAaben] = useState<string | null>(null);
   const [kroppe, setKroppe] = useState<Record<string, IndgaaendeMail | "henter" | null>>({});
 
   const [visSkriv, setVisSkriv] = useState(false);
+  const [fra, setFra] = useState(adresser[0]?.email ?? "");
   const [til, setTil] = useState("");
   const [emne, setEmne] = useState("");
   const [tekst, setTekst] = useState("");
   const [status, setStatus] = useState<SendStatus>("idle");
   const [sendFejl, setSendFejl] = useState("");
+  const [postkasse, setPostkasse] = useState<string>("alle");
   const skrivRef = useRef<HTMLDivElement>(null);
+
+  const synlige = useMemo(() => {
+    if (postkasse === "alle") return mails;
+    const p = postkasse.toLowerCase();
+    return mails.filter((m) => (m.toAddress ?? "").toLowerCase().includes(p));
+  }, [mails, postkasse]);
 
   async function aabnMail(m: IndgaaendeMail) {
     const er = aaben === m.id;
@@ -76,6 +84,9 @@ export function AdminEmail({ mails, konfigureret, fejl, mailAdresse }: Props) {
   function svarPaa(m: IndgaaendeMail) {
     setTil(bareEmail(m.fromAddress));
     setEmne(m.subject.startsWith("Re:") ? m.subject : `Re: ${m.subject}`);
+    // svar fra den adresse mailen kom ind til, hvis vi kender den
+    const modtog = adresser.find((a) => (m.toAddress ?? "").includes(a.email));
+    if (modtog) setFra(modtog.email);
     setTekst("");
     setStatus("idle");
     setVisSkriv(true);
@@ -88,7 +99,7 @@ export function AdminEmail({ mails, konfigureret, fejl, mailAdresse }: Props) {
     if (status === "sender") return;
     setStatus("sender");
     setSendFejl("");
-    const r = await sendMailAction({ til, emne, tekst });
+    const r = await sendMailAction({ til, emne, tekst, fra });
     if (r.ok) {
       setStatus("ok");
       setTil("");
@@ -100,6 +111,8 @@ export function AdminEmail({ mails, konfigureret, fejl, mailAdresse }: Props) {
     }
   }
 
+  const primaer = adresser[0]?.email ?? "kontakt@camsilo.dk";
+
   if (!konfigureret) {
     return (
       <section className="hud-panel">
@@ -110,8 +123,8 @@ export function AdminEmail({ mails, konfigureret, fejl, mailAdresse }: Props) {
         </div>
         <p className="admin-tom">
           PostStack er ikke konfigureret endnu. Sæt <code>POSTSTACK_API_KEY</code>{" "}
-          (og evt. <code>POSTSTACK_FROM</code> / <code>MAIL_ADDRESS</code>) for at
-          modtage og sende mails fra {mailAdresse}.
+          (og evt. <code>MAIL_ADDRESSES</code>) for at modtage og sende mails fra{" "}
+          {primaer}.
         </p>
       </section>
     );
@@ -124,9 +137,6 @@ export function AdminEmail({ mails, konfigureret, fejl, mailAdresse }: Props) {
         <div className="hud-head">
           <span className="hud-label">
             <span className="hud-rune">ᛗ</span> Skriv besked
-            <span className="hud-meta" style={{ marginLeft: 10 }}>
-              fra {mailAdresse}
-            </span>
           </span>
           <button
             type="button"
@@ -140,11 +150,21 @@ export function AdminEmail({ mails, konfigureret, fejl, mailAdresse }: Props) {
         {visSkriv &&
           (status === "ok" ? (
             <p className="mail-ok" role="status">
-              ✦ Sendt. Beskeden er på vej fra {mailAdresse}.
+              ✦ Sendt fra {fra}.
             </p>
           ) : (
             <div className="mail-skriv">
               <div className="kontakt-raekke">
+                <label className="kontakt-felt">
+                  <span>Fra</span>
+                  <select value={fra} onChange={(e) => setFra(e.target.value)}>
+                    {adresser.map((a) => (
+                      <option key={a.email} value={a.email}>
+                        {a.navn} · {a.email}
+                      </option>
+                    ))}
+                  </select>
+                </label>
                 <label className="kontakt-felt">
                   <span>Til</span>
                   <input
@@ -154,16 +174,16 @@ export function AdminEmail({ mails, konfigureret, fejl, mailAdresse }: Props) {
                     placeholder="modtager@eksempel.dk"
                   />
                 </label>
-                <label className="kontakt-felt">
-                  <span>Emne</span>
-                  <input
-                    type="text"
-                    value={emne}
-                    onChange={(e) => setEmne(e.target.value)}
-                    placeholder="Emne"
-                  />
-                </label>
               </div>
+              <label className="kontakt-felt">
+                <span>Emne</span>
+                <input
+                  type="text"
+                  value={emne}
+                  onChange={(e) => setEmne(e.target.value)}
+                  placeholder="Emne"
+                />
+              </label>
               <label className="kontakt-felt">
                 <span>Besked</span>
                 <textarea
@@ -198,18 +218,42 @@ export function AdminEmail({ mails, konfigureret, fejl, mailAdresse }: Props) {
           <span className="hud-label">
             <span className="hud-rune">ᛁ</span> Indbakke
           </span>
-          <span className="hud-meta">{mails.length} mails</span>
+          {adresser.length > 1 && (
+            <nav className="besked-faner" aria-label="Filtrér postkasse">
+              <button
+                type="button"
+                className={postkasse === "alle" ? "aktiv" : ""}
+                aria-pressed={postkasse === "alle"}
+                onClick={() => setPostkasse("alle")}
+              >
+                Alle
+              </button>
+              {adresser.map((a) => (
+                <button
+                  key={a.email}
+                  type="button"
+                  className={postkasse === a.email ? "aktiv" : ""}
+                  aria-pressed={postkasse === a.email}
+                  onClick={() => setPostkasse(a.email)}
+                >
+                  {a.email.split("@")[0]}
+                </button>
+              ))}
+            </nav>
+          )}
         </div>
 
         {fejl ? (
           <p className="admin-fejl">{fejl}</p>
-        ) : mails.length === 0 ? (
+        ) : synlige.length === 0 ? (
           <p className="admin-tom">
-            Ingen mails endnu. Når nogen skriver til {mailAdresse}, lander de her.
+            {mails.length === 0
+              ? `Ingen mails endnu. Når nogen skriver til en camsilo-adresse, lander de her.`
+              : "Ingen mails i denne postkasse."}
           </p>
         ) : (
           <ul className="besked-liste">
-            {mails.map((m) => {
+            {synlige.map((m) => {
               const er = aaben === m.id;
               const krop = kroppe[m.id];
               return (
@@ -233,9 +277,7 @@ export function AdminEmail({ mails, konfigureret, fejl, mailAdresse }: Props) {
                       {krop === "henter" || krop === undefined ? (
                         <p className="admin-tom">Henter …</p>
                       ) : (
-                        <p className="besked-tekst">
-                          {brodtekst(krop ?? m)}
-                        </p>
+                        <p className="besked-tekst">{brodtekst(krop ?? m)}</p>
                       )}
                       <div className="besked-handlinger">
                         <button

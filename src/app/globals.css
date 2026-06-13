@@ -1378,7 +1378,8 @@ a.product-card:hover {
 }
 
 .kontakt-felt input,
-.kontakt-felt textarea {
+.kontakt-felt textarea,
+.kontakt-felt select {
   width: 100%;
   padding: 13px 15px;
   background: rgba(232, 184, 130, 0.04);
@@ -1388,6 +1389,25 @@ a.product-card:hover {
   font: inherit;
   font-size: 15.5px;
   transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+
+.kontakt-felt select {
+  cursor: pointer;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ember) 50%),
+    linear-gradient(135deg, var(--ember) 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) calc(50% - 2px),
+    calc(100% - 13px) calc(50% - 2px);
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 36px;
+}
+
+/* mørk dropdown-liste */
+.kontakt-felt select option {
+  background: var(--bg-raise);
+  color: var(--ink);
 }
 
 .kontakt-felt textarea {
@@ -1403,7 +1423,8 @@ a.product-card:hover {
 }
 
 .kontakt-felt input:focus,
-.kontakt-felt textarea:focus {
+.kontakt-felt textarea:focus,
+.kontakt-felt select:focus {
   outline: none;
   border-color: var(--ember);
   background: rgba(242, 106, 27, 0.05);

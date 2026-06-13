@@ -10,7 +10,7 @@ import {
 import { hentBeskeder } from "@/lib/messages/store";
 import {
   hentIndbakke,
-  MAIL_ADDRESS,
+  mailAdresser,
   postStackKonfigureret,
   type IndgaaendeMail,
 } from "@/lib/poststack";
@@ -152,6 +152,7 @@ export default async function AdminSide({
 
   // E-mail (PostStack) — hentes kun på e-mail-fanen
   const mailKonfig = postStackKonfigureret();
+  const adresser = mailAdresser();
   let mails: IndgaaendeMail[] = [];
   let mailFejl: string | undefined;
   if (vis === "email" && mailKonfig) {
@@ -247,7 +248,7 @@ export default async function AdminSide({
               </p>
             </section>
           ) : (
-            <AdminBeskeder beskeder={beskeder} />
+            <AdminBeskeder beskeder={beskeder} adresser={adresser} />
           ))}
 
         {/* ── E-MAIL (PostStack) ─────────────────────────────────── */}
@@ -256,7 +257,7 @@ export default async function AdminSide({
             mails={mails}
             konfigureret={mailKonfig}
             fejl={mailFejl}
-            mailAdresse={MAIL_ADDRESS}
+            adresser={adresser}
           />
         )}
 

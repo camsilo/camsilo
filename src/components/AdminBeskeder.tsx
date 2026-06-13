@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { Besked } from "@/lib/messages/store";
+import type { Afsender } from "@/lib/poststack";
 import {
   saetArkivAction,
   saetLaestAction,
@@ -31,17 +32,25 @@ function flag(land?: string): string {
   );
 }
 
-export function AdminBeskeder({ beskeder }: { beskeder: Besked[] }) {
+export function AdminBeskeder({
+  beskeder,
+  adresser,
+}: {
+  beskeder: Besked[];
+  adresser: Afsender[];
+}) {
   const [filter, setFilter] = useState<Filter>("nye");
   const [aaben, setAaben] = useState<string | null>(null);
   const [svarId, setSvarId] = useState<string | null>(null);
   const [svarTekst, setSvarTekst] = useState("");
+  const [svarFra, setSvarFra] = useState(adresser[0]?.email ?? "");
   const [svarStatus, setSvarStatus] = useState<SvarStatus>("idle");
   const [svarFejl, setSvarFejl] = useState("");
 
   function aabnSvar(b: Besked) {
     setSvarId(b.id);
     setSvarTekst("");
+    setSvarFra(adresser[0]?.email ?? "");
     setSvarStatus("idle");
     setSvarFejl("");
   }
@@ -50,7 +59,7 @@ export function AdminBeskeder({ beskeder }: { beskeder: Besked[] }) {
     if (svarStatus === "sender" || !svarTekst.trim()) return;
     setSvarStatus("sender");
     setSvarFejl("");
-    const r = await svarBeskedAction(id, svarTekst);
+    const r = await svarBeskedAction(id, svarTekst, svarFra);
     if (r.ok) {
       setSvarStatus("ok");
     } else {
@@ -193,6 +202,21 @@ export function AdminBeskeder({ beskeder }: { beskeder: Besked[] }) {
                         </p>
                       ) : (
                         <div className="besked-svar">
+                          {adresser.length > 1 && (
+                            <label className="kontakt-felt">
+                              <span>Fra</span>
+                              <select
+                                value={svarFra}
+                                onChange={(e) => setSvarFra(e.target.value)}
+                              >
+                                {adresser.map((a) => (
+                                  <option key={a.email} value={a.email}>
+                                    {a.navn} · {a.email}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                          )}
                           <label className="kontakt-felt">
                             <span>Svar til {b.email}</span>
                             <textarea

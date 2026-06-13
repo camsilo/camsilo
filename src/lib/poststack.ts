@@ -19,6 +19,43 @@ export function postStackKonfigureret(): boolean {
   return Boolean(process.env.POSTSTACK_API_KEY);
 }
 
+/** En afsender-adresse man kan skrive fra. */
+export type Afsender = { navn: string; email: string; fuld: string };
+
+// Adresser sættes via MAIL_ADDRESSES (komma-separeret "Navn <email>" eller "email").
+const STANDARD_ADRESSER = "Camsilo <kontakt@camsilo.dk>,Casper Madsen <casper@camsilo.dk>";
+
+function parseAfsender(s: string): Afsender {
+  const m = s.match(/^\s*(.*?)\s*<([^>]+)>\s*$/);
+  if (m) {
+    const email = m[2].trim();
+    return { navn: m[1].trim() || email, email, fuld: `${m[1].trim() || email} <${email}>` };
+  }
+  const email = s.trim();
+  return { navn: email, email, fuld: email };
+}
+
+/** Alle afsender-adresser admin kan skrive/svare fra. */
+export function mailAdresser(): Afsender[] {
+  const raw = process.env.MAIL_ADDRESSES ?? process.env.POSTSTACK_FROM ?? STANDARD_ADRESSER;
+  const liste = raw
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map(parseAfsender);
+  return liste.length ? liste : [parseAfsender(STANDARD_ADRESSER.split(",")[0])];
+}
+
+export function standardAfsender(): Afsender {
+  return mailAdresser()[0];
+}
+
+/** Find en tilladt afsender ud fra e-mail (fallback til standard) — anti-spoofing. */
+export function vaelgAfsender(email?: string): Afsender {
+  const liste = mailAdresser();
+  return liste.find((a) => a.email === email) ?? liste[0];
+}
+
 export type IndgaaendeMail = {
   id: string;
   fromAddress: string;
@@ -131,16 +168,18 @@ export async function sendMail(opts: {
   to: string;
   subject: string;
   html: string;
+  /** fuld afsender "Navn <email>"; default = første tilladte adresse */
+  from?: string;
 }): Promise<void> {
-  const from = process.env.POSTSTACK_FROM ?? `Camsilo <${MAIL_ADDRESS}>`;
+  const afsender = opts.from ? parseAfsender(opts.from) : standardAfsender();
   await ps("/emails", {
     method: "POST",
     body: JSON.stringify({
-      from,
+      from: afsender.fuld,
       to: [opts.to],
       subject: opts.subject,
       html: opts.html,
-      reply_to: MAIL_ADDRESS,
+      reply_to: afsender.email,
     }),
   });
 }

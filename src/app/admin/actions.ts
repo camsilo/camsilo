@@ -14,6 +14,7 @@ import {
   hentMail,
   sendMail,
   tekstTilHtml,
+  vaelgAfsender,
   type IndgaaendeMail,
 } from "@/lib/poststack";
 
@@ -65,6 +66,7 @@ type MailSvar = { ok: boolean; fejl?: string };
 export async function svarBeskedAction(
   id: string,
   tekst: string,
+  fra?: string,
 ): Promise<MailSvar> {
   if (!(await erAdmin())) return { ok: false, fejl: "uautoriseret" };
   const krop = tekst.trim();
@@ -76,7 +78,12 @@ export async function svarBeskedAction(
 
   const emne = besked.emne ? `Re: ${besked.emne}` : "Svar fra Camsilo";
   try {
-    await sendMail({ to: besked.email, subject: emne, html: tekstTilHtml(krop) });
+    await sendMail({
+      to: besked.email,
+      subject: emne,
+      html: tekstTilHtml(krop),
+      from: vaelgAfsender(fra).fuld,
+    });
   } catch (err) {
     console.error("[mail] svar fejlede:", err);
     return { ok: false, fejl: "afsendelse fejlede" };
@@ -86,11 +93,12 @@ export async function svarBeskedAction(
   return { ok: true };
 }
 
-/** Send en fri mail (ny eller svar på indgående) fra camsilo-adressen. */
+/** Send en fri mail (ny eller svar på indgående) fra en valgt camsilo-adresse. */
 export async function sendMailAction(input: {
   til: string;
   emne: string;
   tekst: string;
+  fra?: string;
 }): Promise<MailSvar> {
   if (!(await erAdmin())) return { ok: false, fejl: "uautoriseret" };
   const til = input.til.trim();
@@ -100,7 +108,12 @@ export async function sendMailAction(input: {
   if (!emne || !tekst) return { ok: false, fejl: "udfyld emne og besked" };
 
   try {
-    await sendMail({ to: til, subject: emne, html: tekstTilHtml(tekst) });
+    await sendMail({
+      to: til,
+      subject: emne,
+      html: tekstTilHtml(tekst),
+      from: vaelgAfsender(input.fra).fuld,
+    });
   } catch (err) {
     console.error("[mail] afsendelse fejlede:", err);
     return { ok: false, fejl: "afsendelse fejlede" };
