@@ -1,8 +1,9 @@
 /**
  * Camsilo-mærket: bogstavet "C" flettet som en nordisk to-strenget snoning.
- * To strenge — én i is, én i blæk — væver over og under hinanden langs en
- * åben C-bue, præcis som fletværket i en valknut eller på en runesten.
- * Enderne lukkes af to nittehoveder. Vikingehåndværk og kode i ét tegn.
+ * To strenge — én i glødende jern-orange, én i egetræsbrun — væver over og
+ * under hinanden langs en åben C-bue, præcis som fletværket i en valknut eller
+ * på en runesten. Enderne lukkes af to nittehoveder i orange. Smedet håndværk
+ * og kode i ét tegn.
  */
 
 const C = 32; // centrum i 64×64-feltet
@@ -61,15 +62,15 @@ export function LogoMark({ size = 34 }: { size?: number }) {
       className="logo-mark"
     >
       {/* blæk-streng (under) */}
-      <path d={under} stroke="currentColor" {...fælles} className="logo-strand-ink" />
+      <path d={under} stroke="var(--oak)" {...fælles} className="logo-strand-ink" />
       {/* is-streng (over) */}
-      <path d={over} stroke="var(--ice)" {...fælles} className="logo-strand-ice" />
+      <path d={over} stroke="var(--ember)" {...fælles} className="logo-strand-ice" />
       {/* blæk-strengen vævet tilbage ovenpå ved skiftende kryds */}
-      <path d={lap1} stroke="currentColor" {...fælles} className="logo-strand-ink" />
-      <path d={lap2} stroke="currentColor" {...fælles} className="logo-strand-ink" />
+      <path d={lap1} stroke="var(--oak)" {...fælles} className="logo-strand-ink" />
+      <path d={lap2} stroke="var(--oak)" {...fælles} className="logo-strand-ink" />
       {/* nittehoveder i C'ets to ender */}
-      <circle cx={e0[0]} cy={e0[1]} r={3.2} fill="var(--ice)" />
-      <circle cx={e1[0]} cy={e1[1]} r={3.2} fill="var(--ice)" />
+      <circle cx={e0[0]} cy={e0[1]} r={3.2} fill="var(--ember)" />
+      <circle cx={e1[0]} cy={e1[1]} r={3.2} fill="var(--ember)" />
     </svg>
   );
 }

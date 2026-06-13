@@ -4,20 +4,23 @@
    ────────────────────────────────────────────────────────────── */
 
 :root {
-  --bg: #070a0f;
-  --bg-raise: #0b1018;
-  --panel: rgba(151, 183, 211, 0.04);
-  --line: rgba(167, 196, 222, 0.12);
-  --line-strong: rgba(167, 196, 222, 0.25);
+  /* Smedje & egetræ — varm kul-sort, glødende jern-orange, egetræsbrun */
+  --bg: #0d0b09; /* varm near-black */
+  --bg-raise: #16110c;
+  --panel: rgba(232, 184, 130, 0.045);
+  --line: rgba(224, 172, 120, 0.13);
+  --line-strong: rgba(224, 172, 120, 0.26);
 
-  --ink: #e9eef4;
-  --dim: #93a3b5;
-  /* Løftet fra #5a6a7c → ~5.5:1 kontrast på baggrunden (WCAG AA for normal tekst). */
-  --faint: #7b8b9e;
+  --ink: #f5f0e8; /* varm hvid */
+  --dim: #b8aa99;
+  /* ~5:1 kontrast på baggrunden (WCAG AA for normal tekst). */
+  --faint: #9b8c7c;
 
-  --ice: #7fe0d4; /* glacial teal — primær accent */
-  --ice-deep: #234f4a;
-  --sky: #7fb1ff; /* kold blå — aurora-makker */
+  --ember: #f26a1b; /* Harley/forge-orange — primær accent (glødende jern) */
+  --ember-deep: #b8400a; /* dyb glød til gradienter */
+  --ember-light: #ff8a44; /* lysere orange til hover */
+  --oak: #b07a42; /* egetræsbrun — sekundær, varm makker */
+  --on-ember: #1c0f05; /* near-black til tekst på orange flader */
 
   --radius: 2px;
   --nav-h: 72px;
@@ -45,8 +48,8 @@ body {
 }
 
 ::selection {
-  background: var(--ice);
-  color: #06221e;
+  background: var(--ember);
+  color: var(--on-ember);
 }
 
 a {
@@ -56,7 +59,7 @@ a {
 
 /* Tydelig fokus-ramme for tastaturbrugere (skader ikke muse-/touch-brug) */
 :focus-visible {
-  outline: 2px solid var(--ice);
+  outline: 2px solid var(--ember);
   outline-offset: 3px;
   border-radius: 2px;
 }
@@ -75,8 +78,8 @@ h3 {
   left: -9999px;
   top: 0;
   z-index: 100;
-  background: var(--ice);
-  color: #06221e;
+  background: var(--ember);
+  color: var(--on-ember);
   padding: 10px 18px;
   font-family: var(--font-mono), monospace;
   font-size: 13px;
@@ -102,15 +105,15 @@ h3 {
   height: 130vmax;
   border-radius: 50%;
   filter: blur(90px);
-  opacity: 0.16;
+  opacity: 0.22;
   will-change: transform;
 }
 
 .aurora-a {
   background: radial-gradient(
     closest-side,
-    var(--ice) 0%,
-    rgba(127, 224, 212, 0.25) 35%,
+    var(--ember) 0%,
+    rgba(242, 106, 27, 0.25) 35%,
     transparent 70%
   );
   top: -85vmax;
@@ -121,8 +124,8 @@ h3 {
 .aurora-b {
   background: radial-gradient(
     closest-side,
-    var(--sky) 0%,
-    rgba(127, 177, 255, 0.2) 35%,
+    var(--oak) 0%,
+    rgba(176, 122, 66, 0.2) 35%,
     transparent 70%
   );
   top: -70vmax;
@@ -214,7 +217,7 @@ h3 {
   bottom: 0;
   width: 0;
   height: 1px;
-  background: var(--ice);
+  background: var(--ember);
   transition: width 0.25s;
 }
 
@@ -256,7 +259,7 @@ h3 {
 }
 
 .lang-switch button.active {
-  color: var(--ice);
+  color: var(--ember);
 }
 
 .nav-burger {
@@ -311,7 +314,7 @@ h3 {
 }
 
 .rune-accent {
-  color: var(--ice);
+  color: var(--ember);
   margin-right: 6px;
 }
 
@@ -326,7 +329,12 @@ h3 {
 }
 
 .hero-title-accent {
-  background: linear-gradient(100deg, var(--ice) 10%, var(--sky) 90%);
+  background: linear-gradient(
+    100deg,
+    var(--ember-deep) 0%,
+    var(--ember) 45%,
+    #f9a826 100%
+  );
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -361,13 +369,13 @@ h3 {
 }
 
 .btn-solid {
-  background: var(--ice);
-  color: #06221e;
+  background: var(--ember);
+  color: var(--on-ember);
 }
 
 .btn-solid:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(127, 224, 212, 0.25);
+  box-shadow: 0 8px 32px rgba(242, 106, 27, 0.25);
 }
 
 .btn-ghost {
@@ -376,8 +384,8 @@ h3 {
 }
 
 .btn-ghost:hover {
-  border-color: var(--ice);
-  color: var(--ice);
+  border-color: var(--ember);
+  color: var(--ember);
   transform: translateY(-2px);
 }
 
@@ -410,8 +418,8 @@ h3 {
   padding: 18px 0;
   background: linear-gradient(
     90deg,
-    rgba(127, 224, 212, 0.05),
-    rgba(127, 177, 255, 0.04)
+    rgba(242, 106, 27, 0.05),
+    rgba(176, 122, 66, 0.04)
   );
 }
 
@@ -422,8 +430,8 @@ h3 {
   font-family: var(--font-mono), monospace;
   font-size: 17px;
   letter-spacing: 0.34em;
-  color: rgba(160, 224, 216, 0.55);
-  text-shadow: 0 0 14px rgba(127, 224, 212, 0.2);
+  color: rgba(242, 106, 27, 0.55);
+  text-shadow: 0 0 14px rgba(242, 106, 27, 0.2);
   animation: band 48s linear infinite;
 }
 
@@ -449,7 +457,7 @@ h3 {
   font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 0.22em;
-  color: var(--ice);
+  color: var(--ember);
   margin-bottom: 18px;
   display: flex;
   align-items: center;
@@ -465,11 +473,11 @@ h3 {
   height: 34px;
   font-size: 20px;
   line-height: 1;
-  color: var(--ice);
-  border: 1px solid rgba(127, 224, 212, 0.4);
-  background: rgba(127, 224, 212, 0.07);
-  box-shadow: inset 0 0 14px rgba(127, 224, 212, 0.15);
-  text-shadow: 0 0 12px rgba(127, 224, 212, 0.6);
+  color: var(--ember);
+  border: 1px solid rgba(242, 106, 27, 0.4);
+  background: rgba(242, 106, 27, 0.07);
+  box-shadow: inset 0 0 14px rgba(242, 106, 27, 0.15);
+  text-shadow: 0 0 12px rgba(242, 106, 27, 0.6);
 }
 
 .section-title {
@@ -495,7 +503,7 @@ h3 {
 .card:hover {
   transform: translateY(-4px);
   border-color: var(--line-strong);
-  background: rgba(151, 183, 211, 0.07);
+  background: rgba(232, 184, 130, 0.07);
 }
 
 /* Ristede hjørne-mærker — som hugget i en runesten; tænder i is ved hover */
@@ -506,7 +514,7 @@ h3 {
   width: 14px;
   height: 14px;
   border-style: solid;
-  border-color: rgba(127, 224, 212, 0.45);
+  border-color: rgba(242, 106, 27, 0.45);
   opacity: 1;
   transition: border-color 0.3s, opacity 0.3s;
   pointer-events: none;
@@ -526,7 +534,7 @@ h3 {
 
 .card:hover::before,
 .card:hover::after {
-  border-color: var(--ice);
+  border-color: var(--ember);
   opacity: 1;
 }
 
@@ -554,27 +562,27 @@ h3 {
 }
 
 .tag-live {
-  color: var(--ice);
+  color: var(--ember);
 }
 
 .tag-live .dot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--ice);
-  box-shadow: 0 0 0 0 rgba(127, 224, 212, 0.5);
+  background: var(--ember);
+  box-shadow: 0 0 0 0 rgba(242, 106, 27, 0.5);
   animation: pulse 2.4s infinite;
 }
 
 @keyframes pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(127, 224, 212, 0.45);
+    box-shadow: 0 0 0 0 rgba(242, 106, 27, 0.45);
   }
   70% {
-    box-shadow: 0 0 0 9px rgba(127, 224, 212, 0);
+    box-shadow: 0 0 0 9px rgba(242, 106, 27, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(127, 224, 212, 0);
+    box-shadow: 0 0 0 0 rgba(242, 106, 27, 0);
   }
 }
 
@@ -589,11 +597,11 @@ h3 {
   font-family: var(--font-mono), monospace;
   font-size: 13.5px;
   letter-spacing: 0.06em;
-  color: var(--ice);
+  color: var(--ember);
 }
 
 a.product-card:hover {
-  border-color: rgba(127, 224, 212, 0.45);
+  border-color: rgba(242, 106, 27, 0.45);
 }
 
 .card-muted {
@@ -616,7 +624,7 @@ a.product-card:hover {
 .service-num {
   font-family: var(--font-mono), monospace;
   font-size: 13px;
-  color: var(--ice);
+  color: var(--ember);
   margin-bottom: 20px;
 }
 
@@ -642,7 +650,7 @@ a.product-card:hover {
 
 .value-rune {
   display: inline-block;
-  color: var(--ice);
+  color: var(--ember);
   font-size: 18px;
   margin-bottom: 12px;
 }
@@ -672,8 +680,8 @@ a.product-card:hover {
   max-width: 1280px;
   margin: clamp(48px, 7vw, 96px) auto 0;
   padding: 0 clamp(20px, 6vw, 80px);
-  color: rgba(127, 224, 212, 0.6);
-  filter: drop-shadow(0 0 6px rgba(127, 224, 212, 0.25));
+  color: rgba(242, 106, 27, 0.6);
+  filter: drop-shadow(0 0 6px rgba(242, 106, 27, 0.25));
   -webkit-mask-image: linear-gradient(
     90deg,
     transparent,
@@ -699,7 +707,7 @@ a.product-card:hover {
   position: absolute;
   top: clamp(40px, 7vw, 90px);
   right: clamp(-40px, 2vw, 40px);
-  color: var(--ice);
+  color: var(--ember);
   opacity: 0.16;
   pointer-events: none;
   -webkit-mask-image: radial-gradient(closest-side, #000 60%, transparent);
@@ -720,14 +728,14 @@ a.product-card:hover {
   font-family: var(--font-display), sans-serif;
   font-weight: 500;
   font-size: clamp(20px, 3.2vw, 36px);
-  color: var(--ice);
-  border-bottom: 2px solid rgba(127, 224, 212, 0.35);
+  color: var(--ember);
+  border-bottom: 2px solid rgba(242, 106, 27, 0.35);
   padding-bottom: 8px;
   transition: border-color 0.25s, transform 0.25s;
 }
 
 .contact-mail:hover {
-  border-color: var(--ice);
+  border-color: var(--ember);
   transform: translateX(6px);
 }
 
@@ -765,8 +773,8 @@ a.product-card:hover {
 }
 
 .footer-cvr a:hover {
-  color: var(--ice);
-  border-color: rgba(127, 224, 212, 0.4);
+  color: var(--ember);
+  border-color: rgba(242, 106, 27, 0.4);
 }
 
 .footer-runes {
@@ -886,7 +894,7 @@ a.product-card:hover {
 
 .admin-felt:focus {
   outline: none;
-  border-color: var(--ice);
+  border-color: var(--ember);
 }
 
 .admin-knap {
@@ -904,19 +912,19 @@ a.product-card:hover {
 }
 
 .admin-knap:hover {
-  border-color: var(--ice);
-  color: var(--ice);
+  border-color: var(--ember);
+  color: var(--ember);
 }
 
 .admin-knap-primaer {
-  background: var(--ice);
-  border-color: var(--ice);
-  color: #06221e;
+  background: var(--ember);
+  border-color: var(--ember);
+  color: var(--on-ember);
 }
 
 .admin-knap-primaer:hover {
-  background: #97e8de;
-  color: #06221e;
+  background: var(--ember-light);
+  color: var(--on-ember);
 }
 
 .admin-fejl {
@@ -967,8 +975,8 @@ a.product-card:hover {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--ice);
-  box-shadow: 0 0 8px rgba(127, 224, 212, 0.7);
+  background: var(--ember);
+  box-shadow: 0 0 8px rgba(242, 106, 27, 0.7);
 }
 
 .admin-perioder {
@@ -996,8 +1004,8 @@ a.product-card:hover {
 }
 
 .admin-perioder a.aktiv {
-  background: var(--ice);
-  color: #06221e;
+  background: var(--ember);
+  color: var(--on-ember);
 }
 
 .kpi-net {
@@ -1100,11 +1108,11 @@ a.product-card:hover {
 }
 
 .prik-blaa {
-  background: #7fb1ff;
+  background: #c98a4a;
 }
 
 .prik-is {
-  background: var(--ice);
+  background: var(--ember);
 }
 
 .admin-net {
@@ -1131,8 +1139,8 @@ a.product-card:hover {
 .top-bjaelke {
   position: absolute;
   inset: 0 auto 0 0;
-  background: rgba(127, 224, 212, 0.08);
-  border-right: 2px solid rgba(127, 224, 212, 0.35);
+  background: rgba(242, 106, 27, 0.08);
+  border-right: 2px solid rgba(242, 106, 27, 0.35);
 }
 
 .top-navn {

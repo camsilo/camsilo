@@ -5,8 +5,8 @@ export const alt = "Camsilo — dansk softwarestudie";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-// Brandmærket (skjold + kaunan-rune) som vektor — gengives skarpt i billedet.
-const LOGO_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 64 64"><path d="M49 14.1 L32 4 L8 18 L8 46 L32 60 L56 46 L56 25" fill="none" stroke="#e9eef4" stroke-width="4.5" stroke-linecap="square" stroke-linejoin="miter"/><path d="M41 19 L23 32 L41 45" fill="none" stroke="#7fe0d4" stroke-width="5" stroke-linecap="square" stroke-linejoin="miter"/></svg>`;
+// Brandmærket — det flettede vikinge-C (orange + egetræ) som vektor.
+const LOGO_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 64 64"><g fill="none" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"><path d="M46.12 44.71 L45.08 45.02 L44.04 45.26 L43.03 45.44 L42.05 45.59 L41.11 45.69 L40.20 45.78 L39.33 45.85 L38.49 45.92 L37.69 46.01 L36.93 46.11 L36.18 46.23 L35.45 46.39 L34.74 46.58 L34.02 46.81 L33.28 47.07 L32.54 47.35 L31.76 47.67 L30.95 48.00 L30.10 48.33 L29.21 48.67 L28.27 48.99 L27.29 49.28 L26.26 49.54 L25.19 49.74 L24.09 49.88 L22.96 49.94 L21.81 49.91 L20.66 49.80 L19.52 49.58 L18.40 49.25 L17.31 48.82 L16.27 48.28 L15.30 47.64 L14.40 46.90 L13.59 46.06 L12.88 45.14 L12.28 44.15 L11.79 43.09 L11.41 41.99 L11.16 40.85 L11.03 39.68 L11.02 38.51 L11.12 37.35 L11.32 36.21 L11.63 35.09 L12.01 34.01 L12.48 32.98 L13.00 32.00 L13.57 31.07 L14.18 30.21 L14.80 29.39 L15.44 28.63 L16.07 27.92 L16.69 27.25 L17.29 26.61 L17.86 26.00 L18.40 25.40 L18.90 24.81 L19.37 24.22 L19.80 23.62 L20.21 22.99 L20.59 22.34 L20.96 21.66 L21.33 20.95 L21.70 20.20 L22.08 19.41 L22.48 18.59 L22.92 17.75 L23.40 16.88 L23.94 16.00 L24.53 15.13 L25.19 14.26 L25.92 13.42 L26.72 12.62 L27.58 11.87 L28.52 11.19 L29.51 10.59 L30.56 10.08 L31.66 9.67 L32.79 9.38 L33.94 9.20 L35.11 9.15 L36.27 9.23 L37.42 9.44 L38.53 9.78 L39.60 10.23 L40.62 10.80 L41.57 11.48 L42.44 12.26 L43.23 13.12 L43.94 14.05 L44.55 15.04 L45.07 16.07 L45.51 17.13 L45.85 18.21 L46.12 19.29" stroke="#b07a42"/><path d="M46.12 44.71 L45.85 45.79 L45.51 46.87 L45.07 47.93 L44.55 48.96 L43.94 49.95 L43.23 50.88 L42.44 51.74 L41.57 52.52 L40.62 53.20 L39.60 53.77 L38.53 54.22 L37.42 54.56 L36.27 54.77 L35.11 54.85 L33.94 54.80 L32.79 54.62 L31.66 54.33 L30.56 53.92 L29.51 53.41 L28.52 52.81 L27.58 52.13 L26.72 51.38 L25.92 50.58 L25.19 49.74 L24.53 48.87 L23.94 48.00 L23.40 47.12 L22.92 46.25 L22.48 45.41 L22.08 44.59 L21.70 43.80 L21.33 43.05 L20.96 42.34 L20.59 41.66 L20.21 41.01 L19.80 40.38 L19.37 39.78 L18.90 39.19 L18.40 38.60 L17.86 38.00 L17.29 37.39 L16.69 36.75 L16.07 36.08 L15.44 35.37 L14.80 34.61 L14.18 33.79 L13.57 32.93 L13.00 32.00 L12.48 31.02 L12.01 29.99 L11.63 28.91 L11.32 27.79 L11.12 26.65 L11.02 25.49 L11.03 24.32 L11.16 23.15 L11.41 22.01 L11.79 20.91 L12.28 19.85 L12.88 18.86 L13.59 17.94 L14.40 17.10 L15.30 16.36 L16.27 15.72 L17.31 15.18 L18.40 14.75 L19.52 14.42 L20.66 14.20 L21.81 14.09 L22.96 14.06 L24.09 14.12 L25.19 14.26 L26.26 14.46 L27.29 14.72 L28.27 15.01 L29.21 15.33 L30.10 15.67 L30.95 16.00 L31.76 16.33 L32.54 16.65 L33.28 16.93 L34.02 17.19 L34.74 17.42 L35.45 17.61 L36.18 17.77 L36.93 17.89 L37.69 17.99 L38.49 18.08 L39.33 18.15 L40.20 18.22 L41.11 18.31 L42.05 18.41 L43.03 18.56 L44.04 18.74 L45.08 18.98 L46.12 19.29" stroke="#f26a1b"/><path d="M30.95 48.00 L30.10 48.33 L29.21 48.67 L28.27 48.99 L27.29 49.28 L26.26 49.54 L25.19 49.74 L24.09 49.88 L22.96 49.94 L21.81 49.91 L20.66 49.80 L19.52 49.58 L18.40 49.25" stroke="#b07a42"/><path d="M22.08 19.41 L22.48 18.59 L22.92 17.75 L23.40 16.88 L23.94 16.00 L24.53 15.13 L25.19 14.26 L25.92 13.42 L26.72 12.62 L27.58 11.87 L28.52 11.19 L29.51 10.59 L30.56 10.08" stroke="#b07a42"/></g><circle cx="46.12" cy="44.71" r="3.2" fill="#f26a1b"/><circle cx="46.12" cy="19.29" r="3.2" fill="#f26a1b"/></svg>`;
 const LOGO = `data:image/svg+xml,${encodeURIComponent(LOGO_SVG)}`;
 
 export default function OpengraphImage() {
@@ -21,8 +21,8 @@ export default function OpengraphImage() {
           justifyContent: "space-between",
           padding: "72px 80px",
           background:
-            "linear-gradient(135deg, #070a0f 0%, #0b1018 55%, #0d161f 100%)",
-          color: "#e9eef4",
+            "linear-gradient(135deg, #0d0b09 0%, #16110c 55%, #1d1207 100%)",
+          color: "#f5f0e8",
           fontFamily: "sans-serif",
         }}
       >
@@ -51,7 +51,7 @@ export default function OpengraphImage() {
               fontSize: 82,
               fontWeight: 800,
               lineHeight: 1.04,
-              color: "#7fe0d4",
+              color: "#f26a1b",
             }}
           >
             smedet i Norden.
@@ -66,10 +66,10 @@ export default function OpengraphImage() {
             alignItems: "flex-end",
           }}
         >
-          <span style={{ fontSize: 27, color: "#93a3b5" }}>
+          <span style={{ fontSize: 27, color: "#b8aa99" }}>
             Dansk softwarestudie · Webapps · SaaS · AI-integration
           </span>
-          <span style={{ fontSize: 27, color: "#7fe0d4", letterSpacing: 1 }}>
+          <span style={{ fontSize: 27, color: "#f26a1b", letterSpacing: 1 }}>
             camsilo.dk
           </span>
         </div>

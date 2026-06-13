@@ -81,7 +81,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#070a0f",
+  themeColor: "#0d0b09",
 };
 
 /** Struktureret data (schema.org) — hjælper Google forstå firmaet + CVR. */

@@ -62,12 +62,12 @@ export function AdminGraf({ serie }: { serie: Punkt[] }) {
     >
       <defs>
         <linearGradient id="fyldVisninger" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#7fb1ff" stopOpacity="0.25" />
-          <stop offset="100%" stopColor="#7fb1ff" stopOpacity="0" />
+          <stop offset="0%" stopColor="#c98a4a" stopOpacity="0.25" />
+          <stop offset="100%" stopColor="#c98a4a" stopOpacity="0" />
         </linearGradient>
         <linearGradient id="fyldUnikke" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#7fe0d4" stopOpacity="0.2" />
-          <stop offset="100%" stopColor="#7fe0d4" stopOpacity="0" />
+          <stop offset="0%" stopColor="#f26a1b" stopOpacity="0.2" />
+          <stop offset="100%" stopColor="#f26a1b" stopOpacity="0" />
         </linearGradient>
       </defs>
 
@@ -78,7 +78,7 @@ export function AdminGraf({ serie }: { serie: Punkt[] }) {
             x2={B - PAD_H}
             y1={g.y}
             y2={g.y}
-            stroke="rgba(167,196,222,0.1)"
+            stroke="rgba(224,172,120,0.12)"
             strokeWidth="1"
           />
           <text
@@ -86,7 +86,7 @@ export function AdminGraf({ serie }: { serie: Punkt[] }) {
             y={g.y + 4}
             textAnchor="end"
             fontSize="12"
-            fill="#5a6a7c"
+            fill="#9b8c7c"
             fontFamily="var(--font-mono), monospace"
           >
             {g.vaerdi}
@@ -99,14 +99,14 @@ export function AdminGraf({ serie }: { serie: Punkt[] }) {
       <path
         d={glatSti(serie.map((p) => p.visninger))}
         fill="none"
-        stroke="#7fb1ff"
+        stroke="#c98a4a"
         strokeWidth="2.5"
         strokeLinecap="round"
       />
       <path
         d={glatSti(serie.map((p) => p.unikke))}
         fill="none"
-        stroke="#7fe0d4"
+        stroke="#f26a1b"
         strokeWidth="2.5"
         strokeLinecap="round"
       />
@@ -119,7 +119,7 @@ export function AdminGraf({ serie }: { serie: Punkt[] }) {
             y={H - 10}
             textAnchor="middle"
             fontSize="12"
-            fill="#5a6a7c"
+            fill="#9b8c7c"
             fontFamily="var(--font-mono), monospace"
           >
             {p.label}
