@@ -4,8 +4,11 @@
  * IP-adresser. På HostStack uden persistent disk er lageret FLYGTIGT
  * (nulstilles ved redeploy/genstart) — sæt en disk for varig historik.
  */
-import { appendFile, mkdir, readdir, readFile } from "fs/promises";
+import { appendFile, mkdir, readdir, readFile, unlink } from "fs/promises";
 import path from "path";
+
+const OPBEVARING_DAGE = 120; // hold ~4 mdr. (90d-perioden er den længste visning)
+let sidstRyddet = 0;
 
 export type Haendelse = {
   /** hit = sidevisning, ping = aktivitets-puls (synlig fane) */
@@ -39,10 +42,32 @@ function filnavnFor(ts: number): string {
   return `events-${new Date(ts).toISOString().slice(0, 10)}.ndjson`;
 }
 
+/** Slet dags-filer ældre end OPBEVARING_DAGE — throttlet til højst hver 6. time. */
+async function maaskeRyd(): Promise<void> {
+  const nu = Date.now();
+  if (nu - sidstRyddet < 6 * 3_600_000) return;
+  sidstRyddet = nu;
+  try {
+    const dir = analyticsDir();
+    const graense = new Date(nu - OPBEVARING_DAGE * 86_400_000)
+      .toISOString()
+      .slice(0, 10);
+    for (const f of await readdir(dir)) {
+      const m = f.match(/^events-(\d{4}-\d{2}-\d{2})\.ndjson$/);
+      if (m && m[1] < graense) {
+        await unlink(path.join(dir, f)).catch(() => {});
+      }
+    }
+  } catch {
+    // oprydning er ikke kritisk
+  }
+}
+
 export async function gemHaendelse(h: Haendelse): Promise<void> {
   const dir = analyticsDir();
   await mkdir(dir, { recursive: true });
   await appendFile(path.join(dir, filnavnFor(h.ts)), JSON.stringify(h) + "\n", "utf8");
+  void maaskeRyd();
 }
 
 /** Læs alle hændelser med ts i [fra, til]. Filerne er dags-afgrænsede i UTC. */

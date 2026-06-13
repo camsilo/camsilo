@@ -6,7 +6,7 @@
 //   - Statiske assets (ikoner): cache-first.
 //   - Alt under /api/ og alle ikke-GET requests: røres ALDRIG (rent netværk).
 
-const CACHE_NAME = "camsilo-v2";
+const CACHE_NAME = "camsilo-v3";
 
 // Hvad vi forhåndscacher ved install (kun helt statiske ting).
 const STATIC_ASSETS = [
@@ -118,6 +118,11 @@ self.addEventListener("fetch", (event) => {
   // 3) Alt under /api/ går ALTID rent til netværket (ingen caching).
   if (url.pathname.startsWith("/api/")) {
     return;
+  }
+
+  // 3b) Admin caches ALDRIG (indeholder PII + skal aldrig serveres offline/forældet).
+  if (url.pathname === "/admin" || url.pathname.startsWith("/admin/")) {
+    return; // rent netværk, ingen respondWith/cache
   }
 
   // 4) Navigationer (HTML-sider): network-first.

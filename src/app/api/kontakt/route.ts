@@ -91,7 +91,7 @@ export async function POST(req: Request): Promise<Response> {
   }
 
   // Rate-limit FØR body læses (per-IP + global backstop)
-  const ip = klientIp(req);
+  const ip = klientIp(req.headers);
   if (rateLimited(ip) || globaltOverskredet()) {
     return Response.json({ ok: false, fejl: "rate" }, { status: 429 });
   }

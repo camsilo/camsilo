@@ -9,8 +9,11 @@ import { tolkUa } from "@/lib/ua";
 export const runtime = "nodejs";
 
 const VINDUE_MS = 60_000;
-const MAKS_PR_VINDUE = 120;
+const MAKS_PR_VINDUE = 120; // pr. IP
+const MAKS_GLOBALT = 2000; // backstop på tværs af alle IP'er pr. vindue
+const MAKS_KROP = 4 * 1024; // 4 KB — et beacon-body er <1 KB
 const taeller = new Map<string, { n: number; start: number }>();
+let globalt = { n: 0, start: 0 };
 
 /**
  * Landekode fra en geo-header, hvis platformen leverer en. Vi læser KUN den
@@ -46,14 +49,33 @@ function rateLimited(noegle: string): boolean {
   return post.n > MAKS_PR_VINDUE;
 }
 
+function globaltOverskredet(): boolean {
+  const nu = Date.now();
+  if (nu - globalt.start > VINDUE_MS) {
+    globalt = { n: 1, start: nu };
+    return false;
+  }
+  globalt.n++;
+  return globalt.n > MAKS_GLOBALT;
+}
+
 export async function POST(req: Request): Promise<Response> {
   // Robust IP — ikke den spoofbare venstre-mest XFF-hop (se lib/klient-ip)
-  const ip = klientIp(req);
-  if (rateLimited(ip)) return new Response(null, { status: 429 });
+  const ip = klientIp(req.headers);
+  if (rateLimited(ip) || globaltOverskredet()) {
+    return new Response(null, { status: 429 });
+  }
 
+  // Body-loft FØR parse
+  const len = Number(req.headers.get("content-length"));
+  if (Number.isFinite(len) && len > MAKS_KROP) {
+    return new Response(null, { status: 413 });
+  }
   let krop: unknown;
   try {
-    krop = await req.json();
+    const raw = await req.text();
+    if (raw.length > MAKS_KROP) return new Response(null, { status: 413 });
+    krop = JSON.parse(raw);
   } catch {
     return new Response(null, { status: 400 });
   }

@@ -7,6 +7,7 @@
  */
 import { notificerWebhook } from "@/lib/discord";
 import { sendPush } from "@/lib/push/send";
+import { sikkerSammenligning } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
 
@@ -19,9 +20,12 @@ function felt(o: Record<string, unknown>, ...navne: string[]): string | undefine
 }
 
 export async function POST(req: Request): Promise<Response> {
-  const token = new URL(req.url).searchParams.get("token");
+  // Token kan komme i en header (foretrukket — lækker ikke i logs) eller URL'en
+  const token =
+    req.headers.get("x-webhook-token") ??
+    new URL(req.url).searchParams.get("token");
   const facit = process.env.INBOUND_WEBHOOK_TOKEN;
-  if (!facit || token !== facit) {
+  if (!facit || !token || !sikkerSammenligning(token, facit)) {
     return new Response(null, { status: 401 });
   }
 

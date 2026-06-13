@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import {
   brugernavnKorrekt,
   erAdmin,
@@ -9,6 +10,7 @@ import {
   logAdminInd,
   logAdminUd,
 } from "@/lib/admin-auth";
+import { klientIp } from "@/lib/klient-ip";
 import { hentBesked, opdaterBesked, sletBesked } from "@/lib/messages/store";
 import {
   hentMail,
@@ -18,7 +20,34 @@ import {
   type IndgaaendeMail,
 } from "@/lib/poststack";
 
+// ── Brute-force-værn på login: per-IP + global backstop ───────
+const LOGIN_VINDUE_MS = 15 * 60_000;
+const LOGIN_MAKS = 8; // forsøg pr. IP pr. 15 min
+const LOGIN_MAKS_GLOBALT = 40;
+const loginTaeller = new Map<string, { n: number; start: number }>();
+let loginGlobalt = { n: 0, start: 0 };
+
+function loginBlokeret(ip: string): boolean {
+  const nu = Date.now();
+  if (nu - loginGlobalt.start > LOGIN_VINDUE_MS) loginGlobalt = { n: 0, start: nu };
+  loginGlobalt.n++;
+  if (loginGlobalt.n > LOGIN_MAKS_GLOBALT) return true;
+
+  const p = loginTaeller.get(ip);
+  if (!p || nu - p.start > LOGIN_VINDUE_MS) {
+    loginTaeller.set(ip, { n: 1, start: nu });
+    return false;
+  }
+  p.n++;
+  if (loginTaeller.size > 5000) loginTaeller.clear();
+  return p.n > LOGIN_MAKS;
+}
+
 export async function adminLoginAction(formData: FormData): Promise<void> {
+  const ip = klientIp(await headers());
+  if (loginBlokeret(ip)) {
+    redirect("/admin?fejl=rate");
+  }
   const brugernavn = String(formData.get("brugernavn") ?? "");
   const kode = String(formData.get("kode") ?? "");
   if (!brugernavnKorrekt(brugernavn) || !kodeordKorrekt(kode)) {

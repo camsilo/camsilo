@@ -9,10 +9,12 @@
  * OBS: verificér HostStacks reelle klient-IP-header; den globale backstop-cap i
  * de enkelte routes beskytter uanset, hvis hop-antallet skulle være anderledes.
  */
-export function klientIp(req: Request): string {
-  const xri = req.headers.get("x-real-ip")?.trim();
+type HeaderKilde = { get(name: string): string | null };
+
+export function klientIp(h: HeaderKilde): string {
+  const xri = h.get("x-real-ip")?.trim();
   if (xri) return xri;
-  const xff = req.headers.get("x-forwarded-for");
+  const xff = h.get("x-forwarded-for");
   if (xff) {
     const hops = xff
       .split(",")

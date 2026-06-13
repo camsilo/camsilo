@@ -117,6 +117,11 @@ function LoginSide({ fejl }: { fejl?: string }) {
           {fejl === "kode" && (
             <p className="admin-fejl">Forkert brugernavn eller adgangskode.</p>
           )}
+          {fejl === "rate" && (
+            <p className="admin-fejl">
+              For mange forsøg. Vent et øjeblik, og prøv igen.
+            </p>
+          )}
         </div>
       </div>
     </main>

@@ -41,9 +41,16 @@ export function notificerWebhook(titel: string, linjer: string[]): void {
 
   let krop: string;
   if (/discord(app)?\.com\/api\/webhooks/i.test(url)) {
-    krop = JSON.stringify({ username: "Camsilo", content: indhold.slice(0, 1900) });
+    // allowed_mentions: {parse: []} → @everyone/@here/@rolle pinger ALDRIG,
+    // uanset hvad afsenderen skriver i navn/besked/mail (anti-injektion).
+    krop = JSON.stringify({
+      username: "Camsilo",
+      content: indhold.slice(0, 1900),
+      allowed_mentions: { parse: [] },
+    });
   } else if (/hooks\.slack\.com/i.test(url)) {
-    krop = JSON.stringify({ text: indhold });
+    // Neutralisér Slacks broadcast-syntaks <!everyone>/<!here>
+    krop = JSON.stringify({ text: indhold.replace(/<!/g, "<​!") });
   } else {
     krop = JSON.stringify({ text: indhold, content: indhold });
   }
