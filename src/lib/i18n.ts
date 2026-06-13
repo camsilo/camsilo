@@ -65,6 +65,7 @@ export const dict = {
     contactCta: "kontakt@camsilo.dk",
 
     footerLine: "© 2026 Camsilo · Danmark",
+    footerCvr: "CVR-nr. 45925145 · Enkeltmandsvirksomhed",
     footerRunes: "ᚲᚨᛗᛋᛁᛚᛟ — Camsilo i ældre futhark",
   },
   en: {
@@ -129,6 +130,7 @@ export const dict = {
     contactCta: "kontakt@camsilo.dk",
 
     footerLine: "© 2026 Camsilo · Denmark",
+    footerCvr: "Company reg. (CVR) no. 45925145 · Sole proprietorship",
     footerRunes: "ᚲᚨᛗᛋᛁᛚᛟ — Camsilo in Elder Futhark",
   },
 } as const;

@@ -252,7 +252,13 @@ export function Site() {
 
       <footer className="footer">
         <LogoMark size={22} />
-        <p>{t.footerLine}</p>
+        <div className="footer-legal">
+          <p>{t.footerLine}</p>
+          <p className="footer-cvr">
+            {t.footerCvr} ·{" "}
+            <a href="mailto:kontakt@camsilo.dk">kontakt@camsilo.dk</a>
+          </p>
+        </div>
         <p className="footer-runes" title={t.footerRunes}>
           ᚲᚨᛗᛋᛁᛚᛟ
         </p>
