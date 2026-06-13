@@ -45,6 +45,15 @@ export async function POST(req: Request): Promise<Response> {
     return new Response(null, { status: 204 });
   }
 
+  // Spring spam over (PostStack vurderer indgående) — så ingen kan spamme Discord
+  // ved at maile dig. Mailen ligger stadig i indbakken, men der pinges ikke.
+  const spamVerdict = felt(m, "spamVerdict", "spam_verdict");
+  const raaScore = (m.spamScore ?? m.spam_score) as unknown;
+  const spamScore = typeof raaScore === "number" ? raaScore : null;
+  if (spamVerdict === "spam" || (spamScore !== null && spamScore >= 5)) {
+    return new Response(null, { status: 200 });
+  }
+
   const fra = felt(m, "fromAddress", "from") ?? "(ukendt afsender)";
   const til = felt(m, "toAddress", "to") ?? "";
   const emne = felt(m, "subject") ?? "(uden emne)";

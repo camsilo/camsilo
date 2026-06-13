@@ -1785,6 +1785,20 @@ a.product-card:hover {
   color: #8fe3b0;
   font-weight: 600;
 }
+.mail-spam {
+  display: inline-block;
+  margin-right: 8px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-family: var(--font-mono), monospace;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #e89a7f;
+  background: rgba(224, 138, 127, 0.14);
+  border: 1px solid rgba(224, 138, 127, 0.3);
+  vertical-align: middle;
+}
 .besked-mailto {
   font-family: var(--font-mono), monospace;
   font-size: 12px;

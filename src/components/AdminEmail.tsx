@@ -31,6 +31,14 @@ function bareEmail(s: string): string {
   return (m ? m[1] : s).trim();
 }
 
+/** PostStack-flagget spam? (verdict eller høj score) */
+function erSpam(m: IndgaaendeMail): boolean {
+  return (
+    m.spamVerdict === "spam" ||
+    (typeof m.spamScore === "number" && m.spamScore >= 5)
+  );
+}
+
 /** Ren, sikker tekst af en mail — aldrig rå HTML (anti-XSS i admin). */
 function brodtekst(m: IndgaaendeMail): string {
   if (m.textBody && m.textBody.trim()) return m.textBody;
@@ -269,7 +277,10 @@ export function AdminEmail({ mails, konfigureret, fejl, adresser }: Props) {
                       <span className="besked-navn">{m.fromAddress}</span>
                       <span className="besked-email">→ {m.toAddress}</span>
                     </span>
-                    <span className="besked-emne">{m.subject}</span>
+                    <span className="besked-emne">
+                      {erSpam(m) && <span className="mail-spam">spam</span>}
+                      {m.subject}
+                    </span>
                     <span className="besked-dato">{datoTekst(m.receivedAt)}</span>
                   </button>
                   {er && (
