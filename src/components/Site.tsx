@@ -264,7 +264,7 @@ export function Site() {
         {/* ── KONTAKT ──────────────────────────────────────────── */}
         <section className="section section-contact" id="kontakt">
           <div className="contact-valknut" aria-hidden="true">
-            <Valknut size={260} />
+            <Valknut size={300} />
           </div>
           <p className="section-label reveal">
             <span className="label-rune" title="gebo — gave, gæstfrihed, udveksling" aria-hidden="true">

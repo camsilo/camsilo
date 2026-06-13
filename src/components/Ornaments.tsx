@@ -10,7 +10,7 @@
  * Mønsteret er en 48-bred flise, så det fliser sømløst i fuld bredde.
  */
 export function KnotBand() {
-  const w = 2.6;
+  const w = 3.4;
   return (
     <div className="knot-divider" aria-hidden="true">
       <svg className="knot-svg" width="100%" height="24" role="presentation">
@@ -67,7 +67,7 @@ export function Valknut({ size = 220 }: { size?: number }) {
           key={i}
           points={trekant(cx, cy, R)}
           stroke="currentColor"
-          strokeWidth="2"
+          strokeWidth="2.4"
           strokeLinejoin="miter"
         />
       ))}
