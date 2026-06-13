@@ -8,7 +8,14 @@ import {
   type Periode,
 } from "@/lib/analytics/aggregate";
 import { hentBeskeder } from "@/lib/messages/store";
+import {
+  hentIndbakke,
+  MAIL_ADDRESS,
+  postStackKonfigureret,
+  type IndgaaendeMail,
+} from "@/lib/poststack";
 import { AdminBeskeder } from "@/components/AdminBeskeder";
+import { AdminEmail } from "@/components/AdminEmail";
 import { LogoMark } from "@/components/Logo";
 import OdinOracle from "@/components/admin/OdinOracle";
 import { OdinKpi } from "@/components/admin/OdinKpi";
@@ -126,7 +133,12 @@ export default async function AdminSide({
     return <LoginSide fejl={typeof sp.fejl === "string" ? sp.fejl : undefined} />;
   }
 
-  const vis = sp.vis === "beskeder" ? "beskeder" : "kommandocenter";
+  const vis =
+    sp.vis === "beskeder"
+      ? "beskeder"
+      : sp.vis === "email"
+        ? "email"
+        : "kommandocenter";
 
   // Korrupt besked-lager kaster (skånsom degradering frem for at vælte /admin).
   let beskeder: Awaited<ReturnType<typeof hentBeskeder>> = [];
@@ -137,6 +149,18 @@ export default async function AdminSide({
     beskedFejl = true;
   }
   const nye = beskeder.filter((b) => !b.laest && !b.arkiveret).length;
+
+  // E-mail (PostStack) — hentes kun på e-mail-fanen
+  const mailKonfig = postStackKonfigureret();
+  let mails: IndgaaendeMail[] = [];
+  let mailFejl: string | undefined;
+  if (vis === "email" && mailKonfig) {
+    try {
+      mails = await hentIndbakke();
+    } catch {
+      mailFejl = "Kunne ikke hente indbakken fra PostStack lige nu.";
+    }
+  }
 
   const valgt: Periode = (["24h", "7d", "30d", "90d"] as const).includes(
     sp.periode as Periode,
@@ -176,6 +200,13 @@ export default async function AdminSide({
               >
                 Beskeder
                 {nye > 0 && <span className="admin-badge">{nye}</span>}
+              </Link>
+              <Link
+                href="/admin?vis=email"
+                aria-current={vis === "email" ? "page" : undefined}
+                className={vis === "email" ? "aktiv" : ""}
+              >
+                E-mail
               </Link>
             </nav>
             {vis === "kommandocenter" && (
@@ -218,6 +249,16 @@ export default async function AdminSide({
           ) : (
             <AdminBeskeder beskeder={beskeder} />
           ))}
+
+        {/* ── E-MAIL (PostStack) ─────────────────────────────────── */}
+        {vis === "email" && (
+          <AdminEmail
+            mails={mails}
+            konfigureret={mailKonfig}
+            fejl={mailFejl}
+            mailAdresse={MAIL_ADDRESS}
+          />
+        )}
 
         {/* ── KOMMANDOCENTER ─────────────────────────────────────── */}
         {vis === "kommandocenter" && o && (

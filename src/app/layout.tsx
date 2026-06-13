@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Unbounded, Schibsted_Grotesk, Fragment_Mono } from "next/font/google";
 import { Sporing } from "@/components/Sporing";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
+import { PWARegister } from "@/components/PWARegister";
 import "./globals.css";
 
 const display = Unbounded({
@@ -48,6 +49,16 @@ export const metadata: Metadata = {
     "Camsilo",
   ],
   alternates: { canonical: "/" },
+  // PWA / iOS-installation.
+  appleWebApp: {
+    capable: true,
+    title: "Camsilo",
+    statusBarStyle: "black-translucent",
+  },
+  icons: {
+    icon: "/icon.svg",
+    apple: "/icons/icon-180.png",
+  },
   robots: {
     index: true,
     follow: true,
@@ -131,6 +142,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         {children}
+        <PWARegister />
         <Sporing />
         <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
       </body>

@@ -17,6 +17,10 @@ export type Besked = {
   besked: string;
   laest: boolean;
   arkiveret: boolean;
+  /** er der sendt et svar (via PostStack-mail) til afsenderen? */
+  besvaret?: boolean;
+  /** hvornår der sidst blev svaret (epoch-ms) */
+  svarTs?: number;
   /** sprog formularen blev sendt på (da/en) */
   sprog?: string;
   /** landekode udledt af hostens geo-header (aldrig IP) */
@@ -102,9 +106,14 @@ export async function hentBeskeder(): Promise<Besked[]> {
   return iKoe(async () => (await laesAlle()).sort((a, b) => b.ts - a.ts));
 }
 
+/** Én besked efter id (eller null). */
+export async function hentBesked(id: string): Promise<Besked | null> {
+  return iKoe(async () => (await laesAlle()).find((b) => b.id === id) ?? null);
+}
+
 export async function opdaterBesked(
   id: string,
-  patch: Partial<Pick<Besked, "laest" | "arkiveret">>,
+  patch: Partial<Pick<Besked, "laest" | "arkiveret" | "besvaret" | "svarTs">>,
 ): Promise<void> {
   return iKoe(async () => {
     const liste = await laesAlle();

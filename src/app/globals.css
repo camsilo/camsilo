@@ -1739,6 +1739,64 @@ a.product-card:hover {
   background: rgba(224, 138, 127, 0.08);
 }
 
+/* ── Mail: komposer, svar, status ───────────────────────────── */
+.mail-skriv,
+.besked-svar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.besked-svar {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.mail-ok {
+  margin-top: 14px;
+  padding: 12px 16px;
+  border: 1px solid rgba(116, 227, 210, 0.4);
+  border-radius: var(--radius);
+  background: rgba(116, 227, 210, 0.07);
+  color: var(--ink);
+  font-size: 14.5px;
+}
+.besked-besvaret {
+  color: #8fe3b0;
+  font-weight: 600;
+}
+.besked-mailto {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  color: var(--faint);
+  border-bottom: 1px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+}
+.besked-mailto:hover {
+  color: var(--ember);
+  border-color: rgba(242, 106, 27, 0.4);
+}
+
+/* Topbjælken pakker pænt på små skærme (telefon/PWA) */
+@media (max-width: 720px) {
+  .admin-top {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .admin-top-hoejre {
+    width: 100%;
+    margin-left: 0;
+    justify-content: flex-start;
+  }
+  .admin-faner,
+  .admin-perioder {
+    flex-wrap: wrap;
+  }
+  .odin-wrap {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}
+
 @media (max-width: 760px) {
   .kontakt-raekke {
     grid-template-columns: 1fr;

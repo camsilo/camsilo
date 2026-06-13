@@ -6,7 +6,10 @@ import {
   saetArkivAction,
   saetLaestAction,
   sletBeskedAction,
+  svarBeskedAction,
 } from "@/app/admin/actions";
+
+type SvarStatus = "idle" | "sender" | "ok" | "fejl";
 
 type Filter = "nye" | "alle" | "arkiv";
 
@@ -31,6 +34,30 @@ function flag(land?: string): string {
 export function AdminBeskeder({ beskeder }: { beskeder: Besked[] }) {
   const [filter, setFilter] = useState<Filter>("nye");
   const [aaben, setAaben] = useState<string | null>(null);
+  const [svarId, setSvarId] = useState<string | null>(null);
+  const [svarTekst, setSvarTekst] = useState("");
+  const [svarStatus, setSvarStatus] = useState<SvarStatus>("idle");
+  const [svarFejl, setSvarFejl] = useState("");
+
+  function aabnSvar(b: Besked) {
+    setSvarId(b.id);
+    setSvarTekst("");
+    setSvarStatus("idle");
+    setSvarFejl("");
+  }
+
+  async function sendSvar(id: string) {
+    if (svarStatus === "sender" || !svarTekst.trim()) return;
+    setSvarStatus("sender");
+    setSvarFejl("");
+    const r = await svarBeskedAction(id, svarTekst);
+    if (r.ok) {
+      setSvarStatus("ok");
+    } else {
+      setSvarStatus("fejl");
+      setSvarFejl(r.fejl ?? "Noget gik galt");
+    }
+  }
 
   const tal = useMemo(() => {
     const nye = beskeder.filter((b) => !b.arkiveret && !b.laest).length;
@@ -118,14 +145,19 @@ export function AdminBeskeder({ beskeder }: { beskeder: Besked[] }) {
                   <div className="besked-krop">
                     <p className="besked-tekst">{b.besked}</p>
                     <div className="besked-meta">
+                      {b.besvaret && <span className="besked-besvaret">✓ Besvaret</span>}
                       {b.sprog && <span>Sprog: {b.sprog.toUpperCase()}</span>}
                       {b.land && <span>Land: {b.land}</span>}
                       <span>ID: {b.id.slice(0, 8)}</span>
                     </div>
                     <div className="besked-handlinger">
-                      <a className="admin-knap admin-knap-primaer" href={svar}>
-                        Svar
-                      </a>
+                      <button
+                        type="button"
+                        className="admin-knap admin-knap-primaer"
+                        onClick={() => aabnSvar(b)}
+                      >
+                        Svar pr. mail
+                      </button>
                       <form
                         action={saetLaestAction.bind(null, b.id, !b.laest)}
                         onSubmit={() => setAaben(null)}
@@ -153,6 +185,44 @@ export function AdminBeskeder({ beskeder }: { beskeder: Besked[] }) {
                         </button>
                       </form>
                     </div>
+
+                    {svarId === b.id &&
+                      (svarStatus === "ok" ? (
+                        <p className="mail-ok" role="status">
+                          ✦ Svar sendt til {b.email} fra din Camsilo-mail.
+                        </p>
+                      ) : (
+                        <div className="besked-svar">
+                          <label className="kontakt-felt">
+                            <span>Svar til {b.email}</span>
+                            <textarea
+                              rows={5}
+                              value={svarTekst}
+                              onChange={(e) => setSvarTekst(e.target.value)}
+                              placeholder={`Hej ${b.navn.split(" ")[0]} …`}
+                              autoFocus
+                            />
+                          </label>
+                          <div className="kontakt-bund">
+                            <button
+                              type="button"
+                              className="btn-solid kontakt-send"
+                              onClick={() => sendSvar(b.id)}
+                              disabled={svarStatus === "sender"}
+                            >
+                              {svarStatus === "sender" ? "Sender …" : "Send svar"}
+                            </button>
+                            <a className="besked-mailto" href={svar}>
+                              eller åbn i mailprogram
+                            </a>
+                            {svarStatus === "fejl" && (
+                              <p className="kontakt-status kontakt-fejl" role="alert">
+                                {svarFejl}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
                   </div>
                 )}
               </li>
