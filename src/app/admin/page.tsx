@@ -14,8 +14,9 @@ import {
   postStackKonfigureret,
   type IndgaaendeMail,
 } from "@/lib/poststack";
+import { hentMailTilstande } from "@/lib/mail/state";
 import { AdminBeskeder } from "@/components/AdminBeskeder";
-import { AdminEmail } from "@/components/AdminEmail";
+import { AdminEmail, type AdminMail } from "@/components/AdminEmail";
 import { AdminPWA } from "@/components/admin/AdminPWA";
 import { LogoMark } from "@/components/Logo";
 import OdinOracle from "@/components/admin/OdinOracle";
@@ -159,11 +160,21 @@ export default async function AdminSide({
   // E-mail (PostStack) — hentes kun på e-mail-fanen
   const mailKonfig = postStackKonfigureret();
   const adresser = mailAdresser();
-  let mails: IndgaaendeMail[] = [];
+  let mails: AdminMail[] = [];
   let mailFejl: string | undefined;
   if (vis === "email" && mailKonfig) {
     try {
-      mails = await hentIndbakke();
+      const [raa, tilstande] = await Promise.all([
+        hentIndbakke(),
+        hentMailTilstande(),
+      ]);
+      mails = raa
+        .filter((m) => !tilstande[m.id]?.slettet)
+        .map((m) => ({
+          ...m,
+          laest: Boolean(tilstande[m.id]?.laest),
+          arkiveret: Boolean(tilstande[m.id]?.arkiveret),
+        }));
     } catch {
       mailFejl = "Kunne ikke hente indbakken fra PostStack lige nu.";
     }

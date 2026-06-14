@@ -15,10 +15,14 @@ import { hentBesked, opdaterBesked, sletBesked } from "@/lib/messages/store";
 import {
   hentMail,
   sendMail,
-  tekstTilHtml,
+  sletInbound,
   vaelgAfsender,
   type IndgaaendeMail,
 } from "@/lib/poststack";
+import {
+  hentMailTilstande,
+  saetMailTilstand,
+} from "@/lib/mail/state";
 
 // ── Brute-force-værn på login: per-IP + global backstop ───────
 const LOGIN_VINDUE_MS = 15 * 60_000;
@@ -110,7 +114,7 @@ export async function svarBeskedAction(
     await sendMail({
       to: besked.email,
       subject: emne,
-      html: tekstTilHtml(krop),
+      tekst: krop,
       from: vaelgAfsender(fra).fuld,
     });
   } catch (err) {
@@ -140,7 +144,7 @@ export async function sendMailAction(input: {
     await sendMail({
       to: til,
       subject: emne,
-      html: tekstTilHtml(tekst),
+      tekst,
       from: vaelgAfsender(input.fra).fuld,
     });
   } catch (err) {
@@ -158,5 +162,39 @@ export async function hentMailAction(id: string): Promise<IndgaaendeMail | null>
   } catch (err) {
     console.error("[mail] kunne ikke hente:", err);
     return null;
+  }
+}
+
+// ── Indbakke-styring (lokalt overlay: læst/arkiv/slet) ────────
+
+export async function mailLaestAction(id: string, laest: boolean): Promise<void> {
+  if (!(await erAdmin())) return;
+  await saetMailTilstand(id, { laest });
+  revalidatePath("/admin");
+}
+
+export async function mailArkivAction(
+  id: string,
+  arkiveret: boolean,
+): Promise<void> {
+  if (!(await erAdmin())) return;
+  await saetMailTilstand(id, arkiveret ? { arkiveret, laest: true } : { arkiveret });
+  revalidatePath("/admin");
+}
+
+export async function mailSletAction(id: string): Promise<void> {
+  if (!(await erAdmin())) return;
+  await saetMailTilstand(id, { slettet: true });
+  await sletInbound(id).catch(() => {}); // best-effort også i PostStack
+  revalidatePath("/admin");
+}
+
+/** Markér læst når en mail åbnes (kun hvis ikke allerede læst). */
+export async function mailAabnetAction(id: string): Promise<void> {
+  if (!(await erAdmin())) return;
+  const t = await hentMailTilstande();
+  if (!t[id]?.laest) {
+    await saetMailTilstand(id, { laest: true });
+    revalidatePath("/admin");
   }
 }

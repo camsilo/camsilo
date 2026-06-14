@@ -2,14 +2,26 @@
 
 import { useMemo, useRef, useState } from "react";
 import type { Afsender, IndgaaendeMail } from "@/lib/poststack";
-import { hentMailAction, sendMailAction } from "@/app/admin/actions";
+import {
+  hentMailAction,
+  mailAabnetAction,
+  mailArkivAction,
+  mailLaestAction,
+  mailSletAction,
+  sendMailAction,
+} from "@/app/admin/actions";
+
+export type AdminMail = IndgaaendeMail & { laest: boolean; arkiveret: boolean };
 
 type Props = {
-  mails: IndgaaendeMail[];
+  mails: AdminMail[];
   konfigureret: boolean;
   fejl?: string;
   adresser: Afsender[];
 };
+
+type Filter = "nye" | "alle" | "arkiv";
+type SendStatus = "idle" | "sender" | "ok" | "fejl";
 
 const fmtDato = new Intl.DateTimeFormat("da-DK", {
   day: "2-digit",
@@ -25,13 +37,11 @@ function datoTekst(iso?: string): string {
   return Number.isNaN(d.getTime()) ? "" : fmtDato.format(d);
 }
 
-/** "Navn <a@b.dk>" → "a@b.dk". */
 function bareEmail(s: string): string {
   const m = s.match(/<([^>]+)>/);
   return (m ? m[1] : s).trim();
 }
 
-/** PostStack-flagget spam? (verdict eller høj score) */
 function erSpam(m: IndgaaendeMail): boolean {
   return (
     m.spamVerdict === "spam" ||
@@ -57,9 +67,9 @@ function brodtekst(m: IndgaaendeMail): string {
   return "(tom besked)";
 }
 
-type SendStatus = "idle" | "sender" | "ok" | "fejl";
-
 export function AdminEmail({ mails, konfigureret, fejl, adresser }: Props) {
+  const [filter, setFilter] = useState<Filter>("nye");
+  const [postkasse, setPostkasse] = useState<string>("alle");
   const [aaben, setAaben] = useState<string | null>(null);
   const [kroppe, setKroppe] = useState<Record<string, IndgaaendeMail | "henter" | null>>({});
 
@@ -70,29 +80,45 @@ export function AdminEmail({ mails, konfigureret, fejl, adresser }: Props) {
   const [tekst, setTekst] = useState("");
   const [status, setStatus] = useState<SendStatus>("idle");
   const [sendFejl, setSendFejl] = useState("");
-  const [postkasse, setPostkasse] = useState<string>("alle");
   const skrivRef = useRef<HTMLDivElement>(null);
 
-  const synlige = useMemo(() => {
-    if (postkasse === "alle") return mails;
-    const p = postkasse.toLowerCase();
-    return mails.filter((m) => (m.toAddress ?? "").toLowerCase().includes(p));
-  }, [mails, postkasse]);
+  const tal = useMemo(() => {
+    const nye = mails.filter((m) => !m.arkiveret && !m.laest).length;
+    const alle = mails.filter((m) => !m.arkiveret).length;
+    const arkiv = mails.filter((m) => m.arkiveret).length;
+    return { nye, alle, arkiv };
+  }, [mails]);
 
-  async function aabnMail(m: IndgaaendeMail) {
+  const synlige = useMemo(() => {
+    let liste =
+      filter === "arkiv"
+        ? mails.filter((m) => m.arkiveret)
+        : filter === "nye"
+          ? mails.filter((m) => !m.arkiveret && !m.laest)
+          : mails.filter((m) => !m.arkiveret);
+    if (postkasse !== "alle") {
+      const p = postkasse.toLowerCase();
+      liste = liste.filter((m) => (m.toAddress ?? "").toLowerCase().includes(p));
+    }
+    return liste;
+  }, [mails, filter, postkasse]);
+
+  async function aabnMail(m: AdminMail) {
     const er = aaben === m.id;
     setAaben(er ? null : m.id);
-    if (!er && kroppe[m.id] === undefined) {
-      setKroppe((k) => ({ ...k, [m.id]: "henter" }));
-      const fuld = await hentMailAction(m.id);
-      setKroppe((k) => ({ ...k, [m.id]: fuld ?? m }));
+    if (!er) {
+      if (kroppe[m.id] === undefined) {
+        setKroppe((k) => ({ ...k, [m.id]: "henter" }));
+        const fuld = await hentMailAction(m.id);
+        setKroppe((k) => ({ ...k, [m.id]: fuld ?? m }));
+      }
+      if (!m.laest) void mailAabnetAction(m.id); // markér læst i baggrunden
     }
   }
 
   function svarPaa(m: IndgaaendeMail) {
     setTil(bareEmail(m.fromAddress));
     setEmne(m.subject.startsWith("Re:") ? m.subject : `Re: ${m.subject}`);
-    // svar fra den adresse mailen kom ind til, hvis vi kender den
     const modtog = adresser.find((a) => (m.toAddress ?? "").includes(a.email));
     if (modtog) setFra(modtog.email);
     setTekst("");
@@ -137,6 +163,12 @@ export function AdminEmail({ mails, konfigureret, fejl, adresser }: Props) {
       </section>
     );
   }
+
+  const faner: { id: Filter; navn: string; antal: number }[] = [
+    { id: "nye", navn: "Nye", antal: tal.nye },
+    { id: "alle", navn: "Indbakke", antal: tal.alle },
+    { id: "arkiv", navn: "Arkiv", antal: tal.arkiv },
+  ];
 
   return (
     <div className="odin-stak">
@@ -198,7 +230,7 @@ export function AdminEmail({ mails, konfigureret, fejl, adresser }: Props) {
                   rows={6}
                   value={tekst}
                   onChange={(e) => setTekst(e.target.value)}
-                  placeholder="Skriv din besked …"
+                  placeholder="Skriv din besked … (sendes i Camsilos brand-skabelon)"
                 />
               </label>
               <div className="kontakt-bund">
@@ -222,42 +254,57 @@ export function AdminEmail({ mails, konfigureret, fejl, adresser }: Props) {
 
       {/* Indbakke */}
       <section className="hud-panel besked-panel">
-        <div className="hud-head">
+        <div className="admin-panel-hoved">
           <span className="hud-label">
             <span className="hud-rune">ᛁ</span> Indbakke
           </span>
-          {adresser.length > 1 && (
-            <nav className="besked-faner" aria-label="Filtrér postkasse">
+          <nav className="besked-faner" aria-label="Filtrér">
+            {faner.map((f) => (
               <button
+                key={f.id}
                 type="button"
-                className={postkasse === "alle" ? "aktiv" : ""}
-                aria-pressed={postkasse === "alle"}
-                onClick={() => setPostkasse("alle")}
+                aria-pressed={f.id === filter}
+                className={f.id === filter ? "aktiv" : ""}
+                onClick={() => setFilter(f.id)}
               >
-                Alle
+                {f.navn}
+                <span className="besked-faner-antal">{f.antal}</span>
               </button>
-              {adresser.map((a) => (
-                <button
-                  key={a.email}
-                  type="button"
-                  className={postkasse === a.email ? "aktiv" : ""}
-                  aria-pressed={postkasse === a.email}
-                  onClick={() => setPostkasse(a.email)}
-                >
-                  {a.email.split("@")[0]}
-                </button>
-              ))}
-            </nav>
-          )}
+            ))}
+          </nav>
         </div>
+
+        {adresser.length > 1 && (
+          <nav className="besked-faner" aria-label="Postkasse" style={{ marginBottom: 10 }}>
+            <button
+              type="button"
+              className={postkasse === "alle" ? "aktiv" : ""}
+              onClick={() => setPostkasse("alle")}
+            >
+              Alle postkasser
+            </button>
+            {adresser.map((a) => (
+              <button
+                key={a.email}
+                type="button"
+                className={postkasse === a.email ? "aktiv" : ""}
+                onClick={() => setPostkasse(a.email)}
+              >
+                {a.email.split("@")[0]}
+              </button>
+            ))}
+          </nav>
+        )}
 
         {fejl ? (
           <p className="admin-fejl">{fejl}</p>
         ) : synlige.length === 0 ? (
           <p className="admin-tom">
             {mails.length === 0
-              ? `Ingen mails endnu. Når nogen skriver til en camsilo-adresse, lander de her.`
-              : "Ingen mails i denne postkasse."}
+              ? "Ingen mails endnu. Når nogen skriver til en camsilo-adresse, lander de her."
+              : filter === "nye"
+                ? "Ingen ulæste mails. ✦"
+                : "Ingen mails her."}
           </p>
         ) : (
           <ul className="besked-liste">
@@ -265,7 +312,10 @@ export function AdminEmail({ mails, konfigureret, fejl, adresser }: Props) {
               const er = aaben === m.id;
               const krop = kroppe[m.id];
               return (
-                <li key={m.id} className={`besked${er ? " besked-aaben" : ""}`}>
+                <li
+                  key={m.id}
+                  className={`besked${m.laest ? "" : " besked-ulaest"}${er ? " besked-aaben" : ""}`}
+                >
                   <button
                     type="button"
                     className="besked-hoved"
@@ -298,6 +348,29 @@ export function AdminEmail({ mails, konfigureret, fejl, adresser }: Props) {
                         >
                           Svar
                         </button>
+                        <form action={mailLaestAction.bind(null, m.id, !m.laest)}>
+                          <button className="admin-knap" type="submit">
+                            {m.laest ? "Markér ulæst" : "Markér læst"}
+                          </button>
+                        </form>
+                        <form
+                          action={mailArkivAction.bind(null, m.id, !m.arkiveret)}
+                          onSubmit={() => setAaben(null)}
+                        >
+                          <button className="admin-knap" type="submit">
+                            {m.arkiveret ? "Gendan" : "Arkivér"}
+                          </button>
+                        </form>
+                        <form
+                          action={mailSletAction.bind(null, m.id)}
+                          onSubmit={(e) => {
+                            if (!confirm("Slet mailen permanent?")) e.preventDefault();
+                          }}
+                        >
+                          <button className="admin-knap admin-knap-fare" type="submit">
+                            Slet
+                          </button>
+                        </form>
                       </div>
                     </div>
                   )}

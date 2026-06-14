@@ -10,6 +10,8 @@
  *   POSTSTACK_API_URL  valgfri base-override (default https://api.poststack.dev)
  */
 
+import { byggHtml, byggTekst } from "./mail/template";
+
 const BASE = process.env.POSTSTACK_API_URL ?? "https://api.poststack.dev";
 
 export const MAIL_ADDRESS = process.env.MAIL_ADDRESS ?? "kontakt@camsilo.dk";
@@ -154,20 +156,11 @@ export async function hentMail(id: string): Promise<IndgaaendeMail> {
   return tilMail(inderst);
 }
 
-/** Ren tekst → simpel, escaped HTML (afsnit + linjeskift). */
-export function tekstTilHtml(tekst: string): string {
-  const esc = (s: string) =>
-    s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  return tekst
-    .split(/\n{2,}/)
-    .map((afsnit) => `<p>${esc(afsnit).replace(/\n/g, "<br/>")}</p>`)
-    .join("\n");
-}
-
 export async function sendMail(opts: {
   to: string;
   subject: string;
-  html: string;
+  /** ren tekst — pakkes i brand-skabelonen (html + plain-text) */
+  tekst: string;
   /** fuld afsender "Navn <email>"; default = første tilladte adresse */
   from?: string;
 }): Promise<void> {
@@ -178,8 +171,14 @@ export async function sendMail(opts: {
       from: afsender.fuld,
       to: [opts.to],
       subject: opts.subject,
-      html: opts.html,
+      html: byggHtml(opts.tekst),
+      text: byggTekst(opts.tekst),
       reply_to: afsender.email,
     }),
   });
+}
+
+/** Slet en indgående mail i PostStack (best-effort). */
+export async function sletInbound(id: string): Promise<void> {
+  await ps(`/inbound/${encodeURIComponent(id)}`, { method: "DELETE" });
 }
