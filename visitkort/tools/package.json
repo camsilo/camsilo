@@ -1,0 +1,7 @@
+{
+  "name": "camsilo-visitkort-tools",
+  "private": true,
+  "type": "module",
+  "description": "Build/verify-værktøjer til Camsilo visitkort (ikke en del af camsilo-appen)",
+  "devDependencies": { "jsqr": "^1.4.0", "pngjs": "^7.0.0" }
+}

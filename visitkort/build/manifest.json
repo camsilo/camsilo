@@ -1,0 +1,80 @@
+[
+  {
+    "kind": "png",
+    "file": "preview-A-front.html",
+    "out": "r-A-front.png",
+    "w": 321,
+    "h": 208
+  },
+  {
+    "kind": "png",
+    "file": "preview-A-back.html",
+    "out": "r-A-back.png",
+    "w": 321,
+    "h": 208
+  },
+  {
+    "kind": "png",
+    "file": "preview-A-both.html",
+    "out": "r-A-both.png",
+    "w": 665,
+    "h": 208
+  },
+  {
+    "kind": "pdf",
+    "file": "print-A.html",
+    "out": "camsilo-visitkort-A-esse.pdf"
+  },
+  {
+    "kind": "png",
+    "file": "preview-B-front.html",
+    "out": "r-B-front.png",
+    "w": 321,
+    "h": 208
+  },
+  {
+    "kind": "png",
+    "file": "preview-B-back.html",
+    "out": "r-B-back.png",
+    "w": 321,
+    "h": 208
+  },
+  {
+    "kind": "png",
+    "file": "preview-B-both.html",
+    "out": "r-B-both.png",
+    "w": 665,
+    "h": 208
+  },
+  {
+    "kind": "pdf",
+    "file": "print-B.html",
+    "out": "camsilo-visitkort-B-odin-hud.pdf"
+  },
+  {
+    "kind": "png",
+    "file": "preview-C-front.html",
+    "out": "r-C-front.png",
+    "w": 321,
+    "h": 208
+  },
+  {
+    "kind": "png",
+    "file": "preview-C-back.html",
+    "out": "r-C-back.png",
+    "w": 321,
+    "h": 208
+  },
+  {
+    "kind": "png",
+    "file": "preview-C-both.html",
+    "out": "r-C-both.png",
+    "w": 665,
+    "h": 208
+  },
+  {
+    "kind": "pdf",
+    "file": "print-C.html",
+    "out": "camsilo-visitkort-C-runesten.pdf"
+  }
+]
