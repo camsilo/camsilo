@@ -76,26 +76,28 @@ function OdinSegl() {
         </radialGradient>
       </defs>
 
-      {/* Ydre rune-ring */}
-      <circle
-        cx="60"
-        cy="60"
-        r="56"
-        fill="none"
-        stroke="var(--seid)"
-        strokeOpacity="0.35"
-        strokeWidth="1"
-      />
-      <circle
-        cx="60"
-        cy="60"
-        r="51"
-        fill="none"
-        stroke="var(--ember)"
-        strokeOpacity="0.45"
-        strokeWidth="0.75"
-        strokeDasharray="2 5"
-      />
+      {/* Ydre rune-ring — roterer langsomt som en galdr-port */}
+      <g className="odin-seal-ring">
+        <circle
+          cx="60"
+          cy="60"
+          r="56"
+          fill="none"
+          stroke="var(--seid)"
+          strokeOpacity="0.35"
+          strokeWidth="1"
+        />
+        <circle
+          cx="60"
+          cy="60"
+          r="51"
+          fill="none"
+          stroke="var(--ember)"
+          strokeOpacity="0.45"
+          strokeWidth="0.75"
+          strokeDasharray="2 5"
+        />
+      </g>
 
       {/* Valknut — tre sammenflettede trekanter */}
       <g
@@ -164,6 +166,7 @@ export default function OdinOracle({
       >
         {/* Odins segl */}
         <div
+          className="odin-seal"
           style={{
             width: "clamp(72px, 9vw, 104px)",
             flex: "0 0 auto",
@@ -184,6 +187,7 @@ export default function OdinOracle({
 
           {/* Brand: ODIN */}
           <h1
+            className="odin-brand"
             style={{
               fontFamily: "var(--font-display), sans-serif",
               fontWeight: 700,

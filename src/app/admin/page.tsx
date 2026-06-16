@@ -19,6 +19,7 @@ import { AdminBeskeder } from "@/components/AdminBeskeder";
 import { AdminEmail, type AdminMail } from "@/components/AdminEmail";
 import { AdminPWA } from "@/components/admin/AdminPWA";
 import { LogoMark } from "@/components/Logo";
+import OdinAether from "@/components/admin/OdinAether";
 import OdinOracle from "@/components/admin/OdinOracle";
 import { OdinKpi } from "@/components/admin/OdinKpi";
 import OdinFordeling from "@/components/admin/OdinFordeling";
@@ -84,9 +85,10 @@ function sprogEtiketter(poster: Andel[]): Andel[] {
 function LoginSide({ fejl }: { fejl?: string }) {
   return (
     <main className="admin odin">
+      <OdinAether />
       <div className="odin-wrap">
         <div className="admin-login">
-          <div className="admin-login-maerke">
+          <div className="admin-login-portal">
             <LogoMark size={48} uid="login" glow bg="#0c0a08" />
           </div>
           <h1>ᚨ ODIN ᚨ</h1>
@@ -192,6 +194,7 @@ export default async function AdminSide({
 
   return (
     <main className="admin odin">
+      <OdinAether />
       <div className="odin-wrap">
         {/* ── Topbjælke ──────────────────────────────────────────── */}
         <header className="admin-top">

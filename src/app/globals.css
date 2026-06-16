@@ -211,7 +211,7 @@ h3 {
   justify-content: space-between;
   gap: 24px;
   padding: 0 clamp(20px, 4vw, 48px);
-  background: rgba(7, 10, 15, 0.72);
+  background: rgba(13, 11, 9, 0.72);
   backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--line);
 }
@@ -986,7 +986,8 @@ a.product-card:hover {
     right: 0;
     flex-direction: column;
     gap: 0;
-    background: rgba(7, 10, 15, 0.97);
+    background: rgba(16, 12, 9, 0.98);
+    backdrop-filter: blur(14px);
     border-bottom: 1px solid var(--line);
     max-height: 0;
     overflow: hidden;
@@ -1027,11 +1028,16 @@ a.product-card:hover {
     font-size: 12px;
   }
 
+  /* Emblemet bliver et diskret accent ude mod højre kant — som på desktop —
+     i stedet for et stort, travlt mønster bag overskriften. */
   .hero-watermark {
     animation: none;
-    opacity: 0.28;
-    right: -180px;
-    transform: translateY(-50%) scale(0.82) rotate(-4deg);
+    opacity: 0.16;
+    right: clamp(-260px, -46vw, -150px);
+    top: 44%;
+    transform: translateY(-50%) scale(0.66) rotate(-4deg);
+    -webkit-mask-image: radial-gradient(115% 100% at 92% 50%, #000 26%, transparent 68%);
+    mask-image: radial-gradient(115% 100% at 92% 50%, #000 26%, transparent 68%);
   }
 }
 
@@ -2026,7 +2032,10 @@ a.product-card:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px 12px;
+  /* Pak chip/meta ned på egen linje frem for at flyde ud af panelet, når
+     fx en delta-procent bliver meget bred (↑ 5.700,0%). */
+  flex-wrap: wrap;
   margin-bottom: 16px;
 }
 
@@ -2034,6 +2043,7 @@ a.product-card:hover {
   display: inline-flex;
   align-items: center;
   gap: 9px;
+  min-width: 0; /* tillad at labelen krymper i smalle KPI-kort */
   font-family: var(--font-mono), monospace;
   font-size: 11.5px;
   text-transform: uppercase;
@@ -2131,6 +2141,8 @@ a.product-card:hover {
   font-size: 11.5px;
   padding: 2px 7px;
   border-radius: 999px;
+  white-space: nowrap; /* hold "↑ 5.700,0%" samlet på én linje */
+  margin-left: auto; /* højrestil — også når den pakker ned på egen linje */
 }
 .hud-delta-op {
   color: #8fe3b0;
@@ -2265,6 +2277,287 @@ a.product-card:hover {
   .col-3, .col-4, .col-5, .col-6 { grid-column: span 12; }
 }
 
+/* ══════════════════════════════════════════════════════════════
+   ODIN — SEIÐR-VÆV: magisk baggrund + løftet, levende HUD
+   Alfaderens galdr lagt over kommandocenteret — roterende rune-ringe,
+   drivende æther-glød og opstigende gnister, med paneler der vågner og
+   ånder som varmt jern. Futuristisk astrolabium, ældgammelt håndværk.
+   ══════════════════════════════════════════════════════════════ */
+
+/* Klip æther-laget til skærmen så rune-ringene aldrig giver vandret scroll */
+.odin {
+  overflow-x: clip;
+}
+
+/* ── Æther-laget (bag alt indhold) ──────────────────────────── */
+.odin-aether {
+  position: fixed;
+  inset: 0;
+  z-index: 0; /* bag .odin-wrap, som .odin > * løfter til z-index:1 */
+  overflow: clip;
+  pointer-events: none;
+}
+
+/* Drivende energi-glød — varm esse foroven, kold seiðr forneden */
+.aether-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  will-change: transform, opacity;
+}
+.aether-glow-a {
+  width: 64vmax;
+  height: 64vmax;
+  top: -26vmax;
+  left: 50%;
+  transform: translateX(-50%);
+  background: radial-gradient(closest-side, rgba(242, 106, 27, 0.22), transparent 70%);
+  animation: aether-pulse-a 12s ease-in-out infinite alternate;
+}
+.aether-glow-b {
+  width: 50vmax;
+  height: 50vmax;
+  bottom: -20vmax;
+  right: -10vmax;
+  background: radial-gradient(closest-side, rgba(116, 227, 210, 0.13), transparent 70%);
+  animation: aether-pulse-b 16s ease-in-out 1s infinite alternate;
+}
+@keyframes aether-pulse-a {
+  from { opacity: 0.34; transform: translateX(-50%) scale(0.95); }
+  to   { opacity: 0.62; transform: translateX(-50%) scale(1.08); }
+}
+@keyframes aether-pulse-b {
+  from { opacity: 0.28; transform: scale(1); }
+  to   { opacity: 0.52; transform: scale(1.12); }
+}
+
+/* Koncentriske futhark-rune-ringe — Alfaderens astrolabium */
+.aether-rings {
+  position: absolute;
+  top: clamp(-170px, -7vw, -70px);
+  left: 50%;
+  width: clamp(360px, 94vw, 880px);
+  height: auto;
+  transform: translateX(-50%);
+  opacity: 0.9;
+}
+.aether-circle {
+  fill: none;
+}
+.aether-circle-ember {
+  stroke: rgba(242, 106, 27, 0.16);
+  stroke-width: 1;
+}
+.aether-circle-seid {
+  stroke: rgba(116, 227, 210, 0.12);
+  stroke-width: 1;
+}
+.aether-runes {
+  font-family: var(--font-mono), monospace;
+  font-size: 21px;
+  letter-spacing: 6px;
+}
+.aether-runes-ember {
+  fill: rgba(242, 106, 27, 0.24);
+}
+.aether-runes-seid {
+  fill: rgba(116, 227, 210, 0.22);
+}
+.aether-spin {
+  transform-box: view-box;
+  transform-origin: 300px 300px;
+  will-change: transform;
+}
+.aether-spin-cw {
+  animation: aether-cw 120s linear infinite;
+}
+.aether-spin-ccw {
+  animation: aether-ccw 92s linear infinite;
+}
+@keyframes aether-cw {
+  to { transform: rotate(360deg); }
+}
+@keyframes aether-ccw {
+  to { transform: rotate(-360deg); }
+}
+
+/* Opstigende rune-gnister */
+.aether-motes {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.aether-mote {
+  position: absolute;
+  bottom: -8%;
+  font-family: var(--font-mono), monospace;
+  color: rgba(242, 106, 27, 0.5);
+  text-shadow: 0 0 12px rgba(242, 106, 27, 0.55);
+  opacity: 0;
+  animation-name: aether-rise;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform, opacity;
+}
+.aether-mote-seid {
+  color: rgba(116, 227, 210, 0.5);
+  text-shadow: 0 0 12px rgba(116, 227, 210, 0.55);
+}
+@keyframes aether-rise {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
+  12%  { opacity: 0.75; }
+  85%  { opacity: 0.28; }
+  100% { transform: translateY(-112vh) rotate(44deg); opacity: 0; }
+}
+
+/* ── Levende paneler ────────────────────────────────────────── */
+.hud-panel {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s,
+    box-shadow 0.25s;
+}
+.hud-panel:hover {
+  border-color: var(--hud-line);
+  box-shadow:
+    inset 0 0 42px rgba(242, 106, 27, 0.08),
+    0 0 0 1px rgba(242, 106, 27, 0.1),
+    0 22px 54px -30px #000;
+}
+/* Hjørne-beslagene gløder svagt som ophedet jern */
+.hud-panel::before,
+.hud-panel::after {
+  box-shadow: 0 0 9px rgba(242, 106, 27, 0.28);
+}
+
+/* Oraklet — det glødende reactor-hjerte ånder langsomt */
+.hud-panel-accent {
+  animation: hud-aura 7s ease-in-out infinite;
+}
+@keyframes hud-aura {
+  0%, 100% {
+    box-shadow:
+      inset 0 0 40px rgba(242, 106, 27, 0.08),
+      0 0 0 1px rgba(242, 106, 27, 0.06),
+      0 14px 44px -26px #000;
+  }
+  50% {
+    box-shadow:
+      inset 0 0 56px rgba(242, 106, 27, 0.14),
+      0 0 0 1px rgba(242, 106, 27, 0.15),
+      0 18px 50px -24px #000,
+      0 0 44px -8px rgba(242, 106, 27, 0.28);
+  }
+}
+
+/* Rækkerne i kommandocenteret vågner i en blød stagger ved indlæsning */
+.odin-stak > * {
+  animation: hud-wake 0.85s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.odin-stak > *:nth-child(1) { animation-delay: 0.04s; }
+.odin-stak > *:nth-child(2) { animation-delay: 0.12s; }
+.odin-stak > *:nth-child(3) { animation-delay: 0.2s; }
+.odin-stak > *:nth-child(4) { animation-delay: 0.28s; }
+.odin-stak > *:nth-child(5) { animation-delay: 0.36s; }
+.odin-stak > *:nth-child(6) { animation-delay: 0.44s; }
+.odin-stak > *:nth-child(7) { animation-delay: 0.52s; }
+.odin-stak > *:nth-child(n + 8) { animation-delay: 0.6s; }
+@keyframes hud-wake {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: none; }
+}
+/* Oraklet ånder OG vågner: aura'en ligger på et indre lag via box-shadow,
+   wake styrer kun transform/opacity — ingen animation-konflikt her, fordi
+   wake vinder 'animation' på .odin-stak > * og aura'en er flyttet nedenfor. */
+.odin-stak > .hud-panel-accent {
+  animation: hud-wake 0.85s cubic-bezier(0.16, 1, 0.3, 1) both,
+    hud-aura 7s ease-in-out 0.85s infinite;
+}
+
+/* ── ODIN-brandet: ladet og glødende ────────────────────────── */
+.odin-brand {
+  animation: odin-glow 5s ease-in-out infinite;
+}
+@keyframes odin-glow {
+  0%, 100% {
+    text-shadow: 0 0 26px rgba(242, 106, 27, 0.45), 0 0 70px rgba(242, 106, 27, 0.18);
+  }
+  50% {
+    text-shadow: 0 0 36px rgba(242, 106, 27, 0.68), 0 0 96px rgba(242, 106, 27, 0.32);
+  }
+}
+
+/* Odins segl svæver og roterer sin ydre rune-ring */
+.odin-seal {
+  animation: odin-seal-float 9s ease-in-out infinite;
+}
+@keyframes odin-seal-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+.odin-seal-ring {
+  transform-box: view-box;
+  transform-origin: 60px 60px;
+  animation: aether-cw 48s linear infinite;
+}
+
+/* ── Login: porten til Valhal ───────────────────────────────── */
+.admin-login {
+  position: relative;
+  z-index: 1;
+}
+.admin-login-portal {
+  position: relative;
+  width: clamp(120px, 34vw, 156px);
+  height: clamp(120px, 34vw, 156px);
+  margin: 0 auto 26px;
+  display: grid;
+  place-items: center;
+}
+/* To roterende rune-porte rundt om mærket */
+.admin-login-portal::before,
+.admin-login-portal::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.admin-login-portal::before {
+  border: 1px solid rgba(242, 106, 27, 0.4);
+  border-top-color: rgba(242, 106, 27, 0.9);
+  border-right-color: rgba(255, 200, 120, 0.7);
+  box-shadow: 0 0 26px -6px rgba(242, 106, 27, 0.55),
+    inset 0 0 22px -6px rgba(242, 106, 27, 0.4);
+  animation: aether-cw 14s linear infinite;
+}
+.admin-login-portal::after {
+  inset: 14px;
+  border: 1px dashed rgba(116, 227, 210, 0.45);
+  animation: aether-ccw 22s linear infinite;
+}
+.admin-login-portal .logo-mark {
+  filter: drop-shadow(0 0 18px rgba(242, 106, 27, 0.5));
+  animation: odin-seal-float 7s ease-in-out infinite;
+}
+.admin-login h1 {
+  text-shadow: 0 0 28px rgba(242, 106, 27, 0.4);
+}
+
+/* ── Responsivt: kommandocenteret på mobil ──────────────────── */
+@media (max-width: 720px) {
+  /* 5. KPI får hele bredden så striben aldrig efterlader et hul */
+  .odin-kpis > :last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 460px) {
+  .odin-kpis {
+    grid-template-columns: 1fr;
+  }
+  .odin-kpis > :last-child:nth-child(odd) {
+    grid-column: auto;
+  }
+}
+
 /* ── Reduceret bevægelse ────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
@@ -2288,11 +2581,23 @@ a.product-card:hover {
   .hero-title-accent,
   .contact-valknut,
   .odin::before,
-  .hud-puls {
+  .hud-puls,
+  .aether-glow,
+  .aether-spin,
+  .hud-panel-accent,
+  .odin-stak > *,
+  .odin-stak > .hud-panel-accent,
+  .odin-brand,
+  .odin-seal,
+  .odin-seal-ring,
+  .admin-login-portal::before,
+  .admin-login-portal::after,
+  .admin-login-portal .logo-mark {
     animation: none;
   }
 
-  .embers {
+  .embers,
+  .aether-motes {
     display: none;
   }
 
