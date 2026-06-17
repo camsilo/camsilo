@@ -4,6 +4,7 @@ import { useEffect, useState, type CSSProperties } from "react";
 import { dict, STORAGE_KEY, type Lang } from "@/lib/i18n";
 import { LogoLockup, LogoMark } from "./Logo";
 import { KnotBand, Valknut } from "./Ornaments";
+import { AetherRings } from "./AetherRings";
 import { KontaktForm } from "./KontaktForm";
 
 export function Site() {
@@ -154,6 +155,9 @@ export function Site() {
       <main id="indhold">
         {/* ── HERO ─────────────────────────────────────────────── */}
         <section className="hero" id="top">
+          {/* Roterende rune-ringe (samme astrolabium som Odin-admin) */}
+          <AetherRings />
+
           <div className="hero-watermark" aria-hidden="true">
             <LogoMark size={640} uid="hero" glow bg="#0c0a08" />
           </div>

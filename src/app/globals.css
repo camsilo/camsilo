@@ -365,10 +365,30 @@ h3 {
   }
 }
 
-/* Hero-indhold løftes klart over emblem + gnister */
-.hero > :not(.hero-watermark):not(.embers) {
+/* Hero-indhold løftes klart over emblem + gnister + rune-ringe */
+.hero > :not(.hero-watermark):not(.embers):not(.hero-rings) {
   position: relative;
   z-index: 2;
+}
+
+/* Roterende rune-ringe bag hero'en — samme astrolabium som Odin-admin */
+.hero-rings {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: clip;
+  display: grid;
+  place-items: center;
+}
+
+.hero-rings-svg {
+  width: clamp(330px, 84vw, 760px);
+  height: auto;
+  opacity: 0.85;
+  /* Blød udtoning mod kanterne så ringene smelter ind i fladen */
+  -webkit-mask-image: radial-gradient(closest-side, #000 60%, transparent 100%);
+  mask-image: radial-gradient(closest-side, #000 60%, transparent 100%);
 }
 
 /* Stigende smedje-gnister */
