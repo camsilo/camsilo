@@ -371,6 +371,13 @@ h3 {
   z-index: 2;
 }
 
+/* Indholds-wrapper — egen stacking-context løftet over aether-laget, så det
+   faste baggrundslag (z-index:-1) altid ligger bag logo og alt indhold. */
+.page {
+  position: relative;
+  z-index: 1;
+}
+
 /* Ambient aether-baggrund — samme look som Odin-admin (roterende ringe +
    opstigende runer + scanline), men i forsidens varme farver og UDEN de mørke
    panel-kasser. Fast lag der følger skærmen ved scroll og ligger bag alt. */

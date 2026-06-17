@@ -101,6 +101,9 @@ export function Site() {
       <AetherRings />
       <div className="grain" aria-hidden="true" />
 
+      {/* Indholds-wrapper — egen stacking-context der ligger KLART over det
+          faste aether-baggrundslag, så ringene altid er bag logo + indhold. */}
+      <div className="page">
       <header className="nav">
         <a href="#top" className="nav-logo" aria-label="Camsilo">
           <LogoLockup size={28} uid="nav" />
@@ -362,6 +365,7 @@ export function Site() {
           ᚲᚨᛗᛋᛁᛚᛟ
         </p>
       </footer>
+      </div>
 
     </>
   );
