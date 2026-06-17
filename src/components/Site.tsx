@@ -90,12 +90,15 @@ export function Site() {
       {/* Smedet fremdriftslinje */}
       <div className="scroll-progress" aria-hidden="true" />
 
-      {/* Atmosfære: aurora-glød + smedje-glød + korn */}
+      {/* Atmosfære: aurora-glød + smedje-glød + roterende rune-ringe + korn */}
       <div className="aurora" aria-hidden="true">
         <div className="aurora-band aurora-a" />
         <div className="aurora-band aurora-b" />
       </div>
       <div className="forge-glow" aria-hidden="true" />
+      {/* Roterende rune-ringe (samme astrolabium som Odin-admin) — fast
+          baggrundslag der følger skærmen og ligger bag alt indhold */}
+      <AetherRings />
       <div className="grain" aria-hidden="true" />
 
       <header className="nav">
@@ -155,9 +158,6 @@ export function Site() {
       <main id="indhold">
         {/* ── HERO ─────────────────────────────────────────────── */}
         <section className="hero" id="top">
-          {/* Roterende rune-ringe (samme astrolabium som Odin-admin) */}
-          <AetherRings />
-
           <div className="hero-watermark" aria-hidden="true">
             <LogoMark size={640} uid="hero" glow bg="#0c0a08" />
           </div>

@@ -1,23 +1,35 @@
 /**
- * AetherRings — de roterende futhark-rune-ringe fra Odin-kommandocenteret,
- * genbrugt som ambient baggrund bag forsidens hero.
+ * AetherRings — det ambiente "aether"-baggrundslag fra Odin-kommandocenteret,
+ * genbrugt på forsiden i forsidens varme smedje-farver.
  *
- * Rent SVG + CSS (ingen klient-runtime). Tre koncentriske bærende ringe + to
- * rune-ringe der roterer langsomt i hver sin retning som et nordisk astrolabium
- * — nøjagtig samme visuelle sprog som admins `OdinAether`, men centreret bag
- * hero'en frem for pinnet til toppen. Rent dekorativt (aria-hidden) og slukkes
- * ved prefers-reduced-motion via CSS (.aether-spin).
+ * Rent SVG + CSS (ingen klient-runtime). Et fast lag der følger skærmen ved
+ * scroll og ligger bag alt indhold:
+ *   • tre koncentriske bærende ringe + to futhark-rune-ringe der roterer
+ *     langsomt i hver sin retning (samme astrolabium som admins OdinAether),
+ *   • opstigende rune-gnister der svæver op gennem fladen,
+ *   • en tynd løbende scanline som admins HUD.
  *
- * Deler stil-klasserne (.aether-circle / .aether-spin / .aether-runes) med
- * OdinAether, så de to steder altid ser ens ud.
+ * Til forskel fra admin er der INGEN mørke panel-kasser og INGEN kold seiðr-tone
+ * på gnisterne — alt holdes i forsidens varme ember-palet. Rent dekorativt
+ * (aria-hidden) og slukkes ved prefers-reduced-motion via CSS.
  */
 
-// Elder Futhark (24 runer) — gentages langs ringene.
+// Elder Futhark (24 runer) — gentages langs ringene og bruges til gnisterne.
 const FUTHARK = "ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃᛇᛈᛉᛊᛏᛒᛖᛗᛚᛜᛟᛞ";
+
+// Deterministiske, opstigende rune-gnister (ingen Math.random → stabil SSR).
+const MOTES = Array.from({ length: 16 }, (_, i) => ({
+  rune: FUTHARK[(i * 7) % FUTHARK.length],
+  left: (i * 61) % 100,
+  delay: (i % 8) * 2.1,
+  dur: 14 + (i % 6) * 3,
+  size: 11 + (i % 4) * 4,
+}));
 
 export function AetherRings() {
   return (
-    <div className="hero-rings" aria-hidden="true">
+    <div className="hero-aether" aria-hidden="true">
+      {/* Roterende rune-ringe — centreret i skærmen */}
       <svg
         className="hero-rings-svg"
         viewBox="0 0 600 600"
@@ -49,7 +61,7 @@ export function AetherRings() {
           </text>
         </g>
 
-        {/* Inder-rune-ring — roterer mod uret, kold seiðr */}
+        {/* Inder-rune-ring — roterer mod uret */}
         <g className="aether-spin aether-spin-ccw">
           <text className="aether-runes aether-runes-seid">
             <textPath href="#hero-path-inner" startOffset="0">
@@ -58,6 +70,27 @@ export function AetherRings() {
           </text>
         </g>
       </svg>
+
+      {/* Opstigende rune-gnister — varme (forsidefarver) */}
+      <div className="aether-motes">
+        {MOTES.map((m, i) => (
+          <span
+            key={i}
+            className="aether-mote"
+            style={{
+              left: `${m.left}%`,
+              fontSize: `${m.size}px`,
+              animationDelay: `${m.delay}s`,
+              animationDuration: `${m.dur}s`,
+            }}
+          >
+            {m.rune}
+          </span>
+        ))}
+      </div>
+
+      {/* Tynd løbende scanline — samme HUD-fornemmelse som admin */}
+      <div className="aether-scan" />
     </div>
   );
 }

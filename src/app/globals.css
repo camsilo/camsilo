@@ -365,30 +365,50 @@ h3 {
   }
 }
 
-/* Hero-indhold løftes klart over emblem + gnister + rune-ringe */
-.hero > :not(.hero-watermark):not(.embers):not(.hero-rings) {
+/* Hero-indhold løftes klart over emblem + gnister */
+.hero > :not(.hero-watermark):not(.embers) {
   position: relative;
   z-index: 2;
 }
 
-/* Roterende rune-ringe bag hero'en — samme astrolabium som Odin-admin */
-.hero-rings {
-  position: absolute;
+/* Ambient aether-baggrund — samme look som Odin-admin (roterende ringe +
+   opstigende runer + scanline), men i forsidens varme farver og UDEN de mørke
+   panel-kasser. Fast lag der følger skærmen ved scroll og ligger bag alt. */
+.hero-aether {
+  position: fixed;
   inset: 0;
-  z-index: 0;
+  z-index: -1;
   pointer-events: none;
   overflow: clip;
-  display: grid;
-  place-items: center;
 }
 
+/* Roterende rune-ringe — centreret i skærmen */
 .hero-rings-svg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
   width: clamp(330px, 84vw, 760px);
   height: auto;
+  transform: translate(-50%, -50%);
   opacity: 0.85;
   /* Blød udtoning mod kanterne så ringene smelter ind i fladen */
   -webkit-mask-image: radial-gradient(closest-side, #000 60%, transparent 100%);
   mask-image: radial-gradient(closest-side, #000 60%, transparent 100%);
+}
+
+/* Tynd løbende scanline — samme HUD-fornemmelse som admin, warm ember */
+.aether-scan {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -140px;
+  height: 140px;
+  background: linear-gradient(
+    rgba(242, 106, 27, 0) 0%,
+    rgba(242, 106, 27, 0.05) 50%,
+    rgba(242, 106, 27, 0) 100%
+  );
+  animation: hud-scan 7s linear infinite;
 }
 
 /* Stigende smedje-gnister */
@@ -2604,6 +2624,7 @@ a.product-card:hover {
   .hud-puls,
   .aether-glow,
   .aether-spin,
+  .aether-scan,
   .hud-panel-accent,
   .odin-stak > *,
   .odin-stak > .hud-panel-accent,
