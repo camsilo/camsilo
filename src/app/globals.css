@@ -2659,3 +2659,598 @@ a.product-card:hover {
     display: none;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════
+   ODIN REGNSKAB — bogholderiets HUD-lag
+   Bygger på .odin-temaets tokens (--ember/--seid/--hud-*) og
+   genbruger hud-panel/admin-knap; her ligger kun det regnskabs-
+   specifikke: spørge-flowet, rubrikker, frist-ure og lister.
+   ══════════════════════════════════════════════════════════════ */
+
+/* Under-navigation (delene) — som admin-perioder, men med luft til fold */
+.regnskab-nav {
+  margin: 14px 0 18px;
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+.regnskab-nav .admin-badge {
+  margin-left: 6px;
+}
+
+/* Odins talende afsnit */
+.regnskab-orakel {
+  font-size: 15.5px;
+  line-height: 1.65;
+  color: var(--ink);
+  margin: 0 0 12px;
+  max-width: 72ch;
+}
+.regnskab-orakel a {
+  color: var(--ember-light);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Odins regel-note (rune-indledt) og advarsler */
+.regnskab-odin-note {
+  border-left: 2px solid var(--hud-line);
+  padding: 8px 12px;
+  margin: 10px 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--faint);
+  background: rgba(242, 106, 27, 0.04);
+}
+.regnskab-advarsel {
+  border-left: 2px solid #e0b341;
+  padding: 8px 12px;
+  margin: 10px 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #e8ce8f;
+  background: rgba(224, 179, 65, 0.06);
+}
+.regnskab-odin-kvad {
+  font-family: var(--font-mono), monospace;
+  font-size: 12.5px;
+  letter-spacing: 0.04em;
+  color: var(--seid);
+  margin: 0 0 12px;
+}
+
+/* ── Odin spørger ───────────────────────────────────────────── */
+.regnskab-spoergsmaal {
+  margin-bottom: 14px;
+}
+.regnskab-kategorigrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 8px;
+  margin: 12px 0;
+}
+.regnskab-kategori {
+  appearance: none;
+  text-align: left;
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  background: rgba(24, 18, 12, 0.6);
+  border: 1px solid var(--hud-line-soft);
+  border-radius: 3px;
+  padding: 9px 11px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.12s ease;
+}
+.regnskab-kategori:hover {
+  border-color: var(--hud-line);
+  transform: translateY(-1px);
+}
+.regnskab-kategori.valgt {
+  border-color: var(--ember);
+  background: rgba(242, 106, 27, 0.12);
+  box-shadow: inset 0 0 18px rgba(242, 106, 27, 0.08);
+}
+.regnskab-bogvalg {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 10px 0;
+}
+
+.regnskab-avanceret {
+  margin: 10px 0;
+}
+.regnskab-avanceret-knap {
+  width: 100%;
+  text-align: left;
+}
+.regnskab-avanceret-felter {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+.regnskab-avanceret-felter .kontakt-felt input,
+.regnskab-avanceret-felter .kontakt-felt select,
+.regnskab-filterbjaelke .admin-felt {
+  margin: 0;
+}
+
+.regnskab-husk {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0;
+  font-size: 13.5px;
+  color: var(--faint);
+  flex-wrap: wrap;
+}
+.regnskab-husk input[type="checkbox"] {
+  accent-color: var(--ember);
+  width: 16px;
+  height: 16px;
+}
+.regnskab-husk-moenster {
+  font: inherit;
+  font-family: var(--font-mono), monospace;
+  font-size: 12.5px;
+  color: var(--ember-light);
+  background: rgba(13, 11, 9, 0.7);
+  border: 1px solid var(--hud-line-soft);
+  border-radius: 3px;
+  padding: 4px 8px;
+  min-width: 200px;
+}
+.regnskab-husk-moenster:disabled {
+  opacity: 0.4;
+}
+
+/* ── Nøgletal (dl) og rubrikker ─────────────────────────────── */
+.regnskab-noegletal {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.regnskab-noegletal > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+  border-bottom: 1px dashed rgba(242, 106, 27, 0.12);
+  padding-bottom: 7px;
+}
+.regnskab-noegletal dt {
+  font-size: 13px;
+  color: var(--faint);
+}
+.regnskab-noegletal dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.regnskab-noegletal .regnskab-total dt,
+.regnskab-noegletal .regnskab-total dd {
+  color: var(--ember-light);
+  font-weight: 700;
+}
+
+.regnskab-rubrikker {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 12px 0;
+}
+.regnskab-rubrik {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 14px;
+  border: 1px solid var(--hud-line-soft);
+  border-radius: 3px;
+  padding: 10px 14px;
+  background: rgba(13, 11, 9, 0.5);
+}
+.regnskab-rubrik-navn {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--ink);
+}
+.regnskab-rubrik-tal {
+  grid-row: span 2;
+  align-self: center;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 19px;
+  color: var(--ink);
+  text-shadow: 0 0 16px rgba(242, 106, 27, 0.25);
+  white-space: nowrap;
+}
+.regnskab-rubrik .hud-meta {
+  max-width: 52ch;
+}
+.regnskab-rubrik-total {
+  border-color: var(--hud-line);
+  background: rgba(242, 106, 27, 0.07);
+}
+.regnskab-rubrik-total .regnskab-rubrik-tal {
+  color: var(--ember-light);
+}
+
+/* ── Posterings- og import-lister ───────────────────────────── */
+.regnskab-posteringsliste,
+.regnskab-importlog,
+.regnskab-fristliste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.regnskab-posteringsliste li,
+.regnskab-importlog li,
+.regnskab-fristliste li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 4px;
+  border-bottom: 1px dashed rgba(242, 106, 27, 0.1);
+}
+.regnskab-posteringsliste li:last-child,
+.regnskab-importlog li:last-child,
+.regnskab-fristliste li:last-child {
+  border-bottom: none;
+}
+.regnskab-posteringsliste li.uafklaret {
+  background: rgba(116, 227, 210, 0.03);
+  box-shadow: inset 2px 0 0 var(--seid-soft);
+}
+.regnskab-post-emoji {
+  font-size: 17px;
+  width: 26px;
+  text-align: center;
+  flex: none;
+}
+.regnskab-post-tekst {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.regnskab-post-tekst strong {
+  font-size: 13.5px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.regnskab-post-tekst .hud-meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.regnskab-post-beloeb {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 14px;
+  white-space: nowrap;
+  color: var(--ink);
+}
+.regnskab-post-beloeb.plus {
+  color: var(--seid);
+}
+.regnskab-miniknap {
+  padding: 4px 9px;
+  font-size: 12px;
+}
+
+/* Måneds-grupper */
+.regnskab-maaned {
+  margin-top: 14px;
+}
+.regnskab-maaned-hoved {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--hud-line-soft);
+}
+.regnskab-maaned-hoved strong {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ember);
+}
+
+/* Filterbjælke */
+.regnskab-filterbjaelke {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.regnskab-filterbjaelke .admin-felt {
+  flex: 1;
+  min-width: 180px;
+  width: auto;
+}
+.regnskab-tjek {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--faint);
+  cursor: pointer;
+}
+.regnskab-tjek input[type="checkbox"] {
+  accent-color: var(--ember);
+  width: 15px;
+  height: 15px;
+}
+
+/* ── Import ─────────────────────────────────────────────────── */
+.regnskab-import-felter {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 12px 0;
+}
+.regnskab-filvalg {
+  font-size: 13.5px;
+  color: var(--faint);
+  border: 1px dashed var(--hud-line);
+  border-radius: 3px;
+  padding: 18px 14px;
+  background: rgba(13, 11, 9, 0.45);
+  cursor: pointer;
+}
+.regnskab-filvalg::file-selector-button {
+  font: inherit;
+  font-size: 12.5px;
+  letter-spacing: 0.06em;
+  color: var(--ink);
+  background: rgba(242, 106, 27, 0.14);
+  border: 1px solid var(--hud-line);
+  border-radius: 3px;
+  padding: 7px 13px;
+  margin-right: 12px;
+  cursor: pointer;
+}
+.regnskab-import-kvittering {
+  border: 1px solid var(--hud-line);
+  border-radius: 3px;
+  background: rgba(116, 227, 210, 0.05);
+  padding: 12px 14px;
+  margin-top: 12px;
+  font-size: 14px;
+}
+.regnskab-import-kvittering a {
+  color: var(--seid);
+}
+
+/* ── Frister ────────────────────────────────────────────────── */
+.regnskab-frist-titel {
+  font-size: clamp(19px, 2.4vw, 26px);
+  margin: 0 0 8px;
+  color: var(--ink);
+}
+.regnskab-nedtaelling {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 15px;
+  color: var(--faint);
+  margin: 6px 0 14px;
+  flex-wrap: wrap;
+}
+.regnskab-nedtaelling strong {
+  font-size: clamp(30px, 3.6vw, 44px);
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 22px rgba(242, 106, 27, 0.3);
+}
+.regnskab-nedtaelling.snart strong {
+  color: #e8ce8f;
+}
+.regnskab-nedtaelling.haster strong {
+  color: var(--ember-light);
+  text-shadow: 0 0 26px rgba(242, 106, 27, 0.55);
+}
+.regnskab-ned-sep {
+  color: var(--hud-line);
+  font-size: 24px;
+}
+.regnskab-frist-taeller {
+  flex: none;
+  font-family: var(--font-mono), monospace;
+  font-size: 11.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--seid);
+  border: 1px solid rgba(116, 227, 210, 0.3);
+  border-radius: 3px;
+  padding: 5px 9px;
+  min-width: 74px;
+  text-align: center;
+  white-space: nowrap;
+}
+.regnskab-frist-taeller.snart {
+  color: #e8ce8f;
+  border-color: rgba(224, 179, 65, 0.4);
+}
+.regnskab-frist-taeller.haster {
+  color: var(--ember-light);
+  border-color: var(--hud-line);
+  animation: hud-puls-glow 1.8s ease-in-out infinite;
+}
+.regnskab-frist-taeller.udfoert {
+  color: var(--faint);
+  border-color: rgba(155, 140, 124, 0.25);
+}
+@keyframes hud-puls-glow {
+  0%, 100% { box-shadow: 0 0 0 rgba(242, 106, 27, 0); }
+  50% { box-shadow: 0 0 14px rgba(242, 106, 27, 0.35); }
+}
+.regnskab-frist-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.regnskab-frist-info strong {
+  font-size: 14px;
+}
+.regnskab-frist-handling {
+  color: rgba(155, 140, 124, 0.85);
+}
+.regnskab-fristliste.daempet {
+  opacity: 0.65;
+}
+
+/* ── Momspanelets fold-og-guide ─────────────────────────────── */
+.regnskab-periode-knap {
+  appearance: none;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+.regnskab-klikguide {
+  border: 1px solid var(--hud-line-soft);
+  border-radius: 3px;
+  background: rgba(13, 11, 9, 0.45);
+  margin: 12px 0;
+  padding: 0 14px;
+}
+.regnskab-klikguide summary {
+  cursor: pointer;
+  padding: 11px 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ember-light);
+  list-style: none;
+}
+.regnskab-klikguide summary::-webkit-details-marker {
+  display: none;
+}
+.regnskab-klikguide summary::before {
+  content: "▸ ";
+  color: var(--ember);
+}
+.regnskab-klikguide[open] summary::before {
+  content: "▾ ";
+}
+.regnskab-klikguide ol {
+  margin: 0 0 12px;
+  padding-left: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--ink);
+}
+
+/* ── Viden-basen ────────────────────────────────────────────── */
+.regnskab-viden-tekst {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--ink);
+  margin: 8px 0;
+  max-width: 76ch;
+}
+.regnskab-viden-liste {
+  margin: 8px 0 12px;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+.regnskab-viden-trin {
+  margin: 8px 0 12px;
+  padding-left: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+.regnskab-viden-trin li strong {
+  display: block;
+  color: var(--ember-light);
+}
+.regnskab-viden-tabelwrap {
+  overflow-x: auto;
+  margin: 10px 0 14px;
+}
+.regnskab-viden-tabel {
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 480px;
+}
+.regnskab-viden-tabel th,
+.regnskab-viden-tabel td {
+  border: 1px solid var(--hud-line-soft);
+  padding: 7px 11px;
+  text-align: left;
+  vertical-align: top;
+}
+.regnskab-viden-tabel th {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ember);
+  background: rgba(242, 106, 27, 0.06);
+}
+.regnskab-kilder {
+  padding: 6px 0 12px;
+}
+.regnskab-kilder a {
+  color: var(--seid);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ── Anvisningsliste (skattepanel) ──────────────────────────── */
+.regnskab-anvisning {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--ink);
+}
+.regnskab-anvisning a {
+  color: var(--ember-light);
+}
+
+/* Mobil-tilpasning */
+@media (max-width: 680px) {
+  .regnskab-rubrik {
+    grid-template-columns: 1fr;
+  }
+  .regnskab-rubrik-tal {
+    grid-row: auto;
+  }
+  .regnskab-post-tekst strong,
+  .regnskab-post-tekst .hud-meta {
+    white-space: normal;
+  }
+  .regnskab-husk-moenster {
+    min-width: 0;
+    width: 100%;
+  }
+}

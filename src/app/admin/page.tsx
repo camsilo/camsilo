@@ -229,6 +229,7 @@ export default async function AdminSide({
               >
                 E-mail
               </Link>
+              <Link href="/admin/regnskab">Regnskab</Link>
             </nav>
             {vis === "kommandocenter" && (
               <nav className="admin-perioder" aria-label="Periode">
