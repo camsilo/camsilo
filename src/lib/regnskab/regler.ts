@@ -80,6 +80,13 @@ const INDBYGGEDE: Moenster[] = [
   { moenster: "elevenlabs", konto: "firma", kategori: "software", momsType: "omvendt3land" },
   { moenster: "namecheap", konto: "firma", kategori: "hosting", momsType: "omvendt3land" },
   { moenster: "stripe", konto: "firma", kategori: "bankgebyr" },
+  { moenster: "wise-gebyr", konto: "firma", kategori: "bankgebyr" },
+
+  // ── Kendte kunder (fakturaindbetalinger) ──
+  // COMMS INSTALLATIONS LIMITED er britisk → salg uden for EU (momsfrit,
+  // hverken rubrik B eller EU-salgsliste).
+  { moenster: "comms installations", konto: "firma", kategori: "salg-tredjeland" },
+  { moenster: "amu syd", konto: "firma", kategori: "salg" },
 
   // ── Skat / offentligt ──
   { moenster: "skattekonto", kategori: "moms-skat-betaling", konto: "firma" },

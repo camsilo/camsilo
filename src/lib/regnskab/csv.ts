@@ -314,6 +314,177 @@ function findKolonnerFraIndhold(raekker: string[][]): Kolonner | null {
   return { dato, tekst, beloeb, ...(saldo !== undefined ? { saldo } : {}) };
 }
 
+// ── Wise transaction-history ────────────────────────────────────
+// Wise' eksport er IKKE et kontoudtog: beløb er fortegnsløse (retning i en
+// Direction-kolonne), i flere valutaer, med gebyr og vekselkurs i egne
+// kolonner. Den genkendes på sin header og oversættes til DKK-posteringer:
+//  - fortegn fra Direction (IN/OUT), kun COMPLETED-rækker
+//  - fremmed valuta omregnes til DKK med filens EGNE vekselkurser
+//    (nærmeste veksling i tid) — original beløb + kurs skrives i teksten
+//  - Wise-gebyrer bogføres som separate posteringer (fradragsberettiget
+//    bankgebyr), så indtægter står BRUTTO som på fakturaen
+
+function erWiseHeader(felter: string[]): boolean {
+  const f = felter.map((x) => rensHeader(x).toLowerCase());
+  return (
+    f.includes("direction") &&
+    f.includes("source amount (after fees)") &&
+    f.includes("target currency")
+  );
+}
+
+const fmtValuta = new Intl.NumberFormat("da-DK", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+const fmtKurs = new Intl.NumberFormat("da-DK", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 4,
+});
+
+function parseWise(
+  headerFelter: string[],
+  dataFelter: string[][],
+): { raekker: ParsedRaekke[]; fejllinjer: number } {
+  const navne = headerFelter.map((x) => rensHeader(x).toLowerCase());
+  const idx = (navn: string) => navne.indexOf(navn);
+  const kol = {
+    status: idx("status"),
+    direction: idx("direction"),
+    oprettet: idx("created on"),
+    afsluttet: idx("finished on"),
+    gebyr: idx("source fee amount"),
+    gebyrValuta: idx("source fee currency"),
+    kildeNavn: idx("source name"),
+    kildeBeloeb: idx("source amount (after fees)"),
+    kildeValuta: idx("source currency"),
+    maalNavn: idx("target name"),
+    maalBeloeb: idx("target amount (after fees)"),
+    maalValuta: idx("target currency"),
+    kurs: idx("exchange rate"),
+    reference: idx("reference"),
+  };
+  const felt = (r: string[], i: number) =>
+    i >= 0 ? (r[i] ?? "").replace(/^"|"$/g, "").trim() : "";
+
+  // 1) Byg kurstabel fra filens egne vekslinger: valuta → [(dato, DKK pr. enhed)]
+  const kurser = new Map<string, { dato: string; kurs: number }[]>();
+  for (const r of dataFelter) {
+    if (felt(r, kol.status).toUpperCase() !== "COMPLETED") continue;
+    const fra = felt(r, kol.kildeValuta).toUpperCase();
+    const til = felt(r, kol.maalValuta).toUpperCase();
+    const kurs = parseFloat(felt(r, kol.kurs));
+    const dato =
+      parseDato(felt(r, kol.afsluttet)) ?? parseDato(felt(r, kol.oprettet));
+    if (!dato || !Number.isFinite(kurs) || kurs <= 0 || fra === til) continue;
+    if (til === "DKK" && fra) {
+      (kurser.get(fra) ?? kurser.set(fra, []).get(fra)!).push({ dato, kurs });
+    } else if (fra === "DKK" && til) {
+      (kurser.get(til) ?? kurser.set(til, []).get(til)!).push({
+        dato,
+        kurs: 1 / kurs,
+      });
+    }
+  }
+  const dageMellem = (a: string, b: string) =>
+    Math.abs(
+      (Date.parse(`${a}T12:00:00Z`) - Date.parse(`${b}T12:00:00Z`)) / 86_400_000,
+    );
+  const kursTilDkk = (valuta: string, dato: string): number | null => {
+    if (valuta === "DKK" || valuta === "") return 1;
+    const liste = kurser.get(valuta);
+    if (!liste || liste.length === 0) return null;
+    return liste.reduce((bedst, k) =>
+      dageMellem(k.dato, dato) < dageMellem(bedst.dato, dato) ? k : bedst,
+    ).kurs;
+  };
+  const tilDkkOere = (minorUnits: number, kurs: number) =>
+    Math.round(minorUnits * kurs);
+
+  // 2) Oversæt rækkerne
+  const raekker: ParsedRaekke[] = [];
+  let fejllinjer = 0;
+  for (const r of dataFelter) {
+    // Annullerede/ventende overførsler flytter ingen penge — spring stille over.
+    if (felt(r, kol.status).toUpperCase() !== "COMPLETED") continue;
+
+    const retning = felt(r, kol.direction).toUpperCase();
+    const dato =
+      parseDato(felt(r, kol.afsluttet)) ?? parseDato(felt(r, kol.oprettet));
+    const reference = felt(r, kol.reference);
+    const gebyr = parseBeloebOere(felt(r, kol.gebyr), "en") ?? 0;
+    const gebyrValuta = felt(r, kol.gebyrValuta).toUpperCase();
+
+    if (!dato || (retning !== "IN" && retning !== "OUT")) {
+      fejllinjer++;
+      continue;
+    }
+
+    let hovedOere: number | null = null;
+    let tekst = "";
+    if (retning === "IN") {
+      // Det der landede = målbeløbet; brutto (som på fakturaen) = mål + gebyr.
+      const maal = parseBeloebOere(felt(r, kol.maalBeloeb), "en");
+      const valuta = felt(r, kol.maalValuta).toUpperCase();
+      if (maal === null) {
+        fejllinjer++;
+        continue;
+      }
+      const brutto = maal + (gebyrValuta === valuta ? gebyr : 0);
+      const kurs = kursTilDkk(valuta, dato);
+      if (kurs === null) {
+        fejllinjer++; // ukendt valuta uden veksling i filen — kan ikke omregnes
+        continue;
+      }
+      hovedOere = tilDkkOere(brutto, kurs);
+      tekst = felt(r, kol.kildeNavn) || "Wise-indbetaling";
+      if (reference) tekst += ` · ${reference}`;
+      if (valuta !== "DKK") {
+        tekst += ` · ${fmtValuta.format(brutto / 100)} ${valuta} à ${fmtKurs.format(kurs)}`;
+      }
+    } else {
+      // OUT: har overførslen et DKK-ben, er det den præcise DKK-værdi.
+      const kilde = parseBeloebOere(felt(r, kol.kildeBeloeb), "en");
+      const maal = parseBeloebOere(felt(r, kol.maalBeloeb), "en");
+      const kildeValuta = felt(r, kol.kildeValuta).toUpperCase();
+      const maalValuta = felt(r, kol.maalValuta).toUpperCase();
+      if (maalValuta === "DKK" && maal !== null) {
+        hovedOere = -maal;
+      } else if (kilde !== null) {
+        const kurs = kursTilDkk(kildeValuta, dato);
+        if (kurs === null) {
+          fejllinjer++;
+          continue;
+        }
+        hovedOere = -tilDkkOere(kilde, kurs);
+      } else {
+        fejllinjer++;
+        continue;
+      }
+      tekst = `Overførsel til ${felt(r, kol.maalNavn) || "Wise"}`;
+      if (reference) tekst += ` · ${reference}`;
+      if (kildeValuta !== "DKK" && kilde !== null) {
+        tekst += ` · ${fmtValuta.format(kilde / 100)} ${kildeValuta}`;
+      }
+    }
+
+    raekker.push({ dato, tekst, beloebOere: hovedOere });
+
+    // Gebyret bogføres separat, så hovedbeløbet står brutto.
+    if (gebyr > 0) {
+      const gebyrKurs = kursTilDkk(gebyrValuta, dato);
+      if (gebyrKurs !== null) {
+        raekker.push({
+          dato,
+          tekst: `Wise-gebyr · ${tekst.slice(0, 60)}`,
+          beloebOere: -tilDkkOere(gebyr, gebyrKurs),
+        });
+      }
+    }
+  }
+  return { raekker, fejllinjer };
+}
+
 // ── Hovedparser ─────────────────────────────────────────────────
 
 export function parseKontoudtog(bytes: Uint8Array): ParseResultat {
@@ -338,6 +509,21 @@ export function parseKontoudtog(bytes: Uint8Array): ParseResultat {
 
   const sep = detekterSeparator(linjer);
   const alleFelter = linjer.map((l) => splitLinje(l, sep));
+
+  // Wise' transaction-history er et særtilfælde med egen oversætter.
+  if (erWiseHeader(alleFelter[0])) {
+    const w = parseWise(alleFelter[0], alleFelter.slice(1));
+    return {
+      raekker: w.raekker,
+      fejllinjer: w.fejllinjer,
+      detekteret: {
+        encoding,
+        separator: sep,
+        harHeader: true,
+        kolonner: { dato: 3, tekst: 9, beloeb: 10 },
+      },
+    };
+  }
 
   // Header?
   const headerKolonner = findKolonnerFraHeader(alleFelter[0]);
