@@ -3237,6 +3237,23 @@ a.product-card:hover {
   color: var(--ember-light);
 }
 
+/* ── Statistik-grafen ───────────────────────────────────────── */
+.regnskab-graf-wrap {
+  overflow-x: auto;
+}
+.regnskab-graf {
+  display: block;
+  width: 100%;
+  min-width: 460px;
+  height: auto;
+}
+.regnskab-graf-label {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  fill: var(--faint);
+}
+
 /* Mobil-tilpasning */
 @media (max-width: 680px) {
   .regnskab-rubrik {

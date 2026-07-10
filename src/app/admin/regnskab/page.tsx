@@ -27,6 +27,7 @@ import { OdinSpoerger } from "@/components/admin/regnskab/OdinSpoerger";
 import { OdinMoms } from "@/components/admin/regnskab/OdinMoms";
 import { OdinSkat } from "@/components/admin/regnskab/OdinSkat";
 import { OdinFrister } from "@/components/admin/regnskab/OdinFrister";
+import { OdinStatistik } from "@/components/admin/regnskab/OdinStatistik";
 import { OdinViden } from "@/components/admin/regnskab/OdinViden";
 import { OdinOpsaetning } from "@/components/admin/regnskab/OdinOpsaetning";
 
@@ -42,6 +43,7 @@ const DELE = [
   { id: "odin", navn: "Odin spørger" },
   { id: "firma", navn: "Firma" },
   { id: "privat", navn: "Privat" },
+  { id: "statistik", navn: "Statistik" },
   { id: "moms", navn: "Moms" },
   { id: "skat", navn: "Skat" },
   { id: "frister", navn: "Frister" },
@@ -171,6 +173,10 @@ export default async function RegnskabSide({
               konto={del}
               transaktioner={transaktioner.filter((t) => t.konto === del)}
             />
+          )}
+
+          {del === "statistik" && (
+            <OdinStatistik transaktioner={transaktioner} idag={idag} />
           )}
 
           {del === "moms" && (
