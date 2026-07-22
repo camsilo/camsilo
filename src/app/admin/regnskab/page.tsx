@@ -29,6 +29,7 @@ import { OdinSkat } from "@/components/admin/regnskab/OdinSkat";
 import { OdinFrister } from "@/components/admin/regnskab/OdinFrister";
 import { OdinStatistik } from "@/components/admin/regnskab/OdinStatistik";
 import { OdinViden } from "@/components/admin/regnskab/OdinViden";
+import { OdinRedegoerelse } from "@/components/admin/regnskab/OdinRedegoerelse";
 import { OdinOpsaetning } from "@/components/admin/regnskab/OdinOpsaetning";
 
 export const dynamic = "force-dynamic";
@@ -45,6 +46,7 @@ const DELE = [
   { id: "privat", navn: "Privat" },
   { id: "statistik", navn: "Statistik" },
   { id: "moms", navn: "Moms" },
+  { id: "redegoerelse", navn: "Redegørelse" },
   { id: "skat", navn: "Skat" },
   { id: "frister", navn: "Frister" },
   { id: "import", navn: "Import" },
@@ -190,6 +192,8 @@ export default async function RegnskabSide({
               idag={idag}
             />
           )}
+
+          {del === "redegoerelse" && <OdinRedegoerelse />}
 
           {del === "skat" && (
             <OdinSkat
