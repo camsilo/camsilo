@@ -40,4 +40,4 @@ De er private. Det er kommercielle produkter med kundedata — ikke portfolio-pr
 
 ### Kontakt
 
-[casper@camsilo.dk](mailto:casper@camsilo.dk) · [camsilo.dk](https://camsilo.dk)
+[casper@camsilo.dk](mailto:casper@camsilo.dk) · [camsilo.dk](https://camsilo.dk) · [LinkedIn](https://www.linkedin.com/in/caspermollermadsen/)
