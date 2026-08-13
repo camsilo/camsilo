@@ -8,14 +8,19 @@ Jeg står i lære i teknisk isolering og bygger samtidig den software, faget man
 
 ### Hvad jeg bygger
 
-**[Discebo.dk](https://discebo.dk)** — platform for håndværksbranchen
-Læring, projektstyring og firmadrift samlet ét sted. 120+ fag og uddannelser, faglige beregnere med 3D-visning og pladeudfoldning, projekt- og byggepladsstyring, timeregistrering med løneksport, samt et komplet firmalag med roller og rettigheder. Next.js, TypeScript, PostgreSQL.
+#### [Discebo.dk](https://discebo.dk) — platform for håndværksbranchen
 
-**[TermoCalc](https://termocalc.dk)** — beregning og læring i teknisk isolering
+Læring, projektstyring og firmadrift samlet ét sted. 120+ fag og uddannelser, faglige beregnere med 3D-visning og pladeudfoldning, projekt- og byggepladsstyring, timeregistrering med løneksport, samt et komplet firmalag med roller og rettigheder.
+`Next.js` · `TypeScript` · `PostgreSQL`
+
+#### [TermoCalc](https://termocalc.dk) — beregning og læring i teknisk isolering
+
 Ingeniørkalkulatorer efter DS 452 og EN ISO 12241, kompendium, prøver og AI-assistent. Bruges i både undervisning og praksis.
 
-**[Camsilo](https://camsilo.dk)** — dansk softwarestudie (CVR 45925145)
+#### [Camsilo](https://camsilo.dk) — dansk softwarestudie
+
 Webapplikationer og SaaS, domænespecifikke fagværktøjer, AI-integration samt drift og deployment. Fra første streg til produktion.
+CVR 45925145 · enkeltmandsvirksomhed
 
 ---
 
@@ -29,7 +34,7 @@ Test og kvalitetssikring · CI/CD · GDPR-compliance · betalings- og lønintegr
 
 ### Om mine repositories
 
-De er private. Det er kommercielle produkter med kundedata, ikke portfolio-projekter. Aktivitetsgrafen viser det løbende arbejde — er du interesseret i at se koden, så skriv til mig.
+De er private. Det er kommercielle produkter med kundedata — ikke portfolio-projekter. Aktivitetsgrafen viser det løbende arbejde. Er du interesseret i at se koden, så skriv til mig.
 
 ---
 
