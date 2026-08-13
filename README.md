@@ -11,7 +11,6 @@ Jeg står i lære i teknisk isolering og bygger samtidig den software, faget man
 #### [Discebo.dk](https://discebo.dk) — platform for håndværksbranchen
 
 Læring, projektstyring og firmadrift samlet ét sted. 120+ fag og uddannelser, faglige beregnere med 3D-visning og pladeudfoldning, projekt- og byggepladsstyring, timeregistrering med løneksport, samt et komplet firmalag med roller og rettigheder.
-`Next.js` · `TypeScript` · `PostgreSQL`
 
 #### [TermoCalc](https://termocalc.dk) — beregning og læring i teknisk isolering
 
@@ -20,7 +19,8 @@ Ingeniørkalkulatorer efter DS 452 og EN ISO 12241, kompendium, prøver og AI-as
 #### [Camsilo](https://camsilo.dk) — dansk softwarestudie
 
 Webapplikationer og SaaS, domænespecifikke fagværktøjer, AI-integration samt drift og deployment. Fra første streg til produktion.
-CVR 45925145 · enkeltmandsvirksomhed
+
+*CVR 45925145 · enkeltmandsvirksomhed*
 
 ---
 
