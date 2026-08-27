@@ -17,8 +17,10 @@ import { mkdir, readFile, writeFile, rename } from "fs/promises";
 import path from "path";
 import { randomUUID } from "crypto";
 import type {
+  Faktura,
   ImportLog,
   Indstillinger,
+  Kursdifference,
   MomsIndberetning,
   Regel,
   Transaktion,
@@ -182,6 +184,97 @@ export async function oplaasIndberetning(indberetningId: string): Promise<number
   });
 }
 
+// ── Fakturaer ───────────────────────────────────────────────────
+//
+// Fakturaerne er salgssiden af regnskabet og ligger for sig, fordi de styres
+// af FAKTURADATOEN, ikke af hvornår pengene kom ind. Se Faktura i typer.ts.
+
+const F_FIL = "fakturaer.json";
+
+export async function hentFakturaer(): Promise<Faktura[]> {
+  return iKoe(async () => {
+    const arr = await laesJson<Faktura[]>(F_FIL, []);
+    if (!Array.isArray(arr)) throw new Error(`${F_FIL} er ikke et array`);
+    return arr.sort((a, b) => a.fakturadato.localeCompare(b.fakturadato));
+  });
+}
+
+export async function gemFaktura(
+  faktura: Omit<Faktura, "id" | "ts"> & { id?: string },
+): Promise<Faktura> {
+  return iKoe(async () => {
+    const arr = await laesJson<Faktura[]>(F_FIL, []);
+    if (faktura.id) {
+      const i = arr.findIndex((f) => f.id === faktura.id);
+      if (i >= 0) {
+        const opdateret = { ...arr[i], ...faktura, id: arr[i].id, ts: arr[i].ts };
+        arr[i] = opdateret;
+        await skrivJson(F_FIL, arr);
+        return opdateret;
+      }
+    }
+    // Fakturanummeret skal være entydigt — ellers brydes det fortløbende spor.
+    if (arr.some((f) => f.nummer === faktura.nummer)) {
+      throw new Error(`Fakturanummer ${faktura.nummer} findes allerede`);
+    }
+    const ny: Faktura = { ...faktura, id: randomUUID(), ts: Date.now() } as Faktura;
+    arr.push(ny);
+    await skrivJson(F_FIL, arr);
+    return ny;
+  });
+}
+
+export async function sletFaktura(id: string): Promise<void> {
+  return iKoe(async () => {
+    const arr = await laesJson<Faktura[]>(F_FIL, []);
+    const ny = arr.filter((f) => f.id !== id);
+    if (ny.length !== arr.length) await skrivJson(F_FIL, ny);
+  });
+}
+
+/** Kobler en betaling (transaktions-id) på en faktura. */
+export async function knytBetaling(
+  fakturaId: string,
+  transaktionId: string,
+): Promise<Faktura | null> {
+  return iKoe(async () => {
+    const arr = await laesJson<Faktura[]>(F_FIL, []);
+    const i = arr.findIndex((f) => f.id === fakturaId);
+    if (i < 0) return null;
+    const betalinger = new Set(arr[i].betalinger ?? []);
+    betalinger.add(transaktionId);
+    arr[i] = { ...arr[i], betalinger: [...betalinger] };
+    await skrivJson(F_FIL, arr);
+    return arr[i];
+  });
+}
+
+// ── Kursdifferencer ─────────────────────────────────────────────
+
+const K_FIL = "kursdifferencer.json";
+
+export async function hentKursdifferencer(): Promise<Kursdifference[]> {
+  return iKoe(async () => {
+    const arr = await laesJson<Kursdifference[]>(K_FIL, []);
+    if (!Array.isArray(arr)) throw new Error(`${K_FIL} er ikke et array`);
+    return arr;
+  });
+}
+
+export async function gemKursdifference(
+  k: Omit<Kursdifference, "id" | "ts">,
+): Promise<Kursdifference> {
+  return iKoe(async () => {
+    const arr = await laesJson<Kursdifference[]>(K_FIL, []);
+    // Én difference pr. faktura — genberegning erstatter den gamle.
+    const uden = arr.filter((x) => x.fakturaId !== k.fakturaId);
+    const ny: Kursdifference = { ...k, id: randomUUID(), ts: Date.now() };
+    uden.push(ny);
+    await skrivJson(K_FIL, uden);
+    return ny;
+  });
+}
+
 // ── Lærte regler ────────────────────────────────────────────────
 
 const R_FIL = "regler.json";
@@ -313,7 +406,9 @@ export async function markerPeriodeIndberettet(
     }
 
     const transaktioner = await laesTransaktioner();
-    const o = beregnMomsOpgoerelse(transaktioner, periode);
+    // Læses direkte frem for gennem hentFakturaer(), som selv tager køen.
+    const fakturaer = await laesJson<Faktura[]>(F_FIL, []);
+    const o = beregnMomsOpgoerelse(transaktioner, periode, [], fakturaer);
 
     const ny: MomsIndberetning = {
       id: randomUUID(),
@@ -324,6 +419,7 @@ export async function markerPeriodeIndberettet(
       tilsvarOere: o.tilsvarOere,
       rubrikAOere: o.rubrikAYdelserOere,
       rubrikBOere: o.rubrikBYdelserOere,
+      rubrikCOere: o.rubrikCOere,
       ts: Date.now(),
     };
 

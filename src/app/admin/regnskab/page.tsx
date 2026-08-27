@@ -11,6 +11,8 @@ import {
   hentIndstillinger,
   hentLaerteRegler,
   hentTransaktioner,
+  hentFakturaer,
+  hentKursdifferencer,
 } from "@/lib/regnskab/store";
 import {
   beregnMomsOpgoerelse,
@@ -20,6 +22,7 @@ import { beregnSkatteOpgoerelse, udgifterPrKategori } from "@/lib/regnskab/skat"
 import { beregnFrister, dageTil, idagIso } from "@/lib/regnskab/frister";
 import { foreslaaKategori } from "@/lib/regnskab/regler";
 import { satserFor } from "@/lib/regnskab/satser";
+import { beregnFradragsMaalere } from "@/lib/regnskab/fradragslofter";
 import { OdinRegnskabOversigt } from "@/components/admin/regnskab/OdinRegnskabOversigt";
 import { OdinImport } from "@/components/admin/regnskab/OdinImport";
 import { OdinTransaktioner } from "@/components/admin/regnskab/OdinTransaktioner";
@@ -31,6 +34,8 @@ import { OdinStatistik } from "@/components/admin/regnskab/OdinStatistik";
 import { OdinViden } from "@/components/admin/regnskab/OdinViden";
 import { OdinRedegoerelse } from "@/components/admin/regnskab/OdinRedegoerelse";
 import { OdinOpsaetning } from "@/components/admin/regnskab/OdinOpsaetning";
+import { OdinFakturaer } from "@/components/admin/regnskab/OdinFakturaer";
+import { OdinFradrag } from "@/components/admin/regnskab/OdinFradrag";
 
 export const dynamic = "force-dynamic";
 
@@ -42,12 +47,14 @@ export const metadata: Metadata = {
 const DELE = [
   { id: "oversigt", navn: "Oversigt" },
   { id: "odin", navn: "Odin spørger" },
+  { id: "fakturaer", navn: "Fakturaer" },
   { id: "firma", navn: "Firma" },
   { id: "privat", navn: "Privat" },
   { id: "statistik", navn: "Statistik" },
   { id: "moms", navn: "Moms" },
   { id: "redegoerelse", navn: "Redegørelse" },
   { id: "skat", navn: "Skat" },
+  { id: "fradrag", navn: "Fradrag" },
   { id: "frister", navn: "Frister" },
   { id: "import", navn: "Import" },
   { id: "viden", navn: "Viden" },
@@ -68,14 +75,23 @@ export default async function RegnskabSide({
     DELE.some((d) => d.id === sp.del) ? sp.del : "oversigt"
   ) as Del;
 
-  const [indstillinger, transaktioner, indberetninger, importLog, laerte] =
-    await Promise.all([
-      hentIndstillinger(),
-      hentTransaktioner(),
-      hentIndberetninger(),
-      hentImportLog(),
-      hentLaerteRegler(),
-    ]);
+  const [
+    indstillinger,
+    transaktioner,
+    indberetninger,
+    importLog,
+    laerte,
+    fakturaer,
+    kursdifferencer,
+  ] = await Promise.all([
+    hentIndstillinger(),
+    hentTransaktioner(),
+    hentIndberetninger(),
+    hentImportLog(),
+    hentLaerteRegler(),
+    hentFakturaer(),
+    hentKursdifferencer(),
+  ]);
 
   // Før Odins onboarding er svaret, er opsætningen eneste visning.
   const del: Del = indstillinger.onboardingFaerdig ? oensketDel : "opsaetning";
@@ -149,7 +165,7 @@ export default async function RegnskabSide({
               skat={beregnSkatteOpgoerelse(transaktioner, iAar, indstillinger)}
               moms={relevantePerioder(indstillinger.foersteAar, indstillinger.momsperiode, idag)
                 .slice(0, 1)
-                .map((p) => beregnMomsOpgoerelse(transaktioner, p, indberetninger))[0] ?? null}
+                .map((p) => beregnMomsOpgoerelse(transaktioner, p, indberetninger, fakturaer))[0] ?? null}
               frister={frister.filter((f) => !f.udfoert && dageTil(f.dato, idag) >= 0).slice(0, 3)}
               idag={idag}
               uafklarede={uafklarede.length}
@@ -177,6 +193,20 @@ export default async function RegnskabSide({
             />
           )}
 
+          {del === "fakturaer" && (
+            <OdinFakturaer
+              fakturaer={fakturaer}
+              kursdifferencer={kursdifferencer}
+            />
+          )}
+
+          {del === "fradrag" && (
+            <OdinFradrag
+              maalere={beregnFradragsMaalere(transaktioner, iAar)}
+              aar={iAar}
+            />
+          )}
+
           {del === "statistik" && (
             <OdinStatistik transaktioner={transaktioner} idag={idag} />
           )}
@@ -188,7 +218,7 @@ export default async function RegnskabSide({
                 indstillinger.foersteAar,
                 indstillinger.momsperiode,
                 idag,
-              ).map((p) => beregnMomsOpgoerelse(transaktioner, p, indberetninger))}
+              ).map((p) => beregnMomsOpgoerelse(transaktioner, p, indberetninger, fakturaer))}
               idag={idag}
             />
           )}

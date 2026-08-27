@@ -5,6 +5,7 @@ import { randomUUID } from "crypto";
 import { erAdmin } from "@/lib/admin-auth";
 import {
   beregnFingeraftryk,
+  parseBeloebOere,
   parseKontoudtog,
 } from "@/lib/regnskab/csv";
 import {
@@ -12,25 +13,36 @@ import {
   foreslaaKategori,
   normaliserTekst,
 } from "@/lib/regnskab/regler";
-import { perioderForAar } from "@/lib/regnskab/moms";
+import { foreslaaFakturaRubrik, perioderForAar } from "@/lib/regnskab/moms";
+import {
+  hentKurs,
+  kursdifferenceOere,
+  skalKursgevinstOplyses,
+  tilDkkOere,
+} from "@/lib/regnskab/valuta";
 import {
   fjernImportLog,
+  gemFaktura,
   gemImportLog,
+  gemKursdifference,
   gemIndstillinger,
   gemLaertRegel,
   hentIndstillinger,
   hentLaerteRegler,
   hentTransaktioner,
+  knytBetaling,
   markerPeriodeIndberettet,
   oplaasIndberetning,
   opdaterIndberetning,
   opdaterTransaktion,
+  sletFaktura,
   sletImport,
   sletIndberetning,
   sletLaertRegel,
   tilfoejTransaktioner,
 } from "@/lib/regnskab/store";
 import type {
+  FakturaRubrik,
   Indstillinger,
   Konto,
   MomsType,
@@ -428,4 +440,162 @@ export async function genaabnAction(id: string): Promise<Svar> {
   }
   revalidatePath(STI);
   return { ok: true };
+}
+
+// ── Fakturaer ───────────────────────────────────────────────────
+//
+// En faktura er salgssidens sandhed. Den periodiseres efter FAKTURADATOEN,
+// og fremmed valuta omregnes med Nationalbankens kurs på samme dato — ikke
+// med den kurs, banken tilfældigvis vekslede til måneder senere.
+
+export type FakturaInput = {
+  id?: string;
+  nummer: string;
+  kunde: string;
+  land: string;
+  kundeMomsnr?: string;
+  fakturadato: string;
+  forfaldsdato?: string;
+  ydelse?: string;
+  valuta: string;
+  /** Beløb ekskl. moms, som det står på fakturaen (fx "32460,00"). */
+  beloeb: string;
+  /** Momsbeløb, som det står på fakturaen. Tom eller "0" ved salg uden moms. */
+  moms?: string;
+  /** Manuel kurs, hvis Nationalbanken ikke kunne nås. DKK pr. 1 enhed. */
+  manuelKurs?: string;
+  rubrik?: FakturaRubrik;
+  note?: string;
+};
+
+function tilOere(raa: string): number | null {
+  const n = parseBeloebOere(raa ?? "", "dk");
+  return n;
+}
+
+/** Opret eller opdatér en faktura. Henter selv kursen fra Nationalbanken. */
+export async function gemFakturaAction(
+  input: FakturaInput,
+): Promise<Svar<{ id: string; kurs: number; kursdato?: string; forskudt: boolean }>> {
+  if (!(await erAdmin())) return fejl("uautoriseret");
+
+  const nummer = input.nummer.trim();
+  if (!nummer) return fejl("Fakturanummer mangler.");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(input.fakturadato)) {
+    return fejl("Fakturadatoen skal være på formen ÅÅÅÅ-MM-DD.");
+  }
+  const beloebOere = tilOere(input.beloeb);
+  if (beloebOere === null || beloebOere <= 0) return fejl("Beløbet kunne ikke læses.");
+  const momsOere = input.moms?.trim() ? (tilOere(input.moms) ?? 0) : 0;
+
+  const valuta = (input.valuta || "DKK").toUpperCase().trim();
+
+  // Kurs: Nationalbanken på fakturadatoen — ellers den manuelt indtastede.
+  let kurs = 1;
+  let kursdato: string | undefined = input.fakturadato;
+  let kurskilde = "DKK";
+  let forskudt = false;
+  if (valuta !== "DKK") {
+    const opslag = await hentKurs(valuta, input.fakturadato);
+    if (opslag) {
+      kurs = opslag.kurs;
+      kursdato = opslag.kursdato;
+      kurskilde = opslag.kilde;
+      forskudt = opslag.forskudt;
+    } else {
+      const manuel = Number((input.manuelKurs ?? "").replace(",", "."));
+      if (!Number.isFinite(manuel) || manuel <= 0) {
+        return fejl(
+          `Kursen for ${valuta} den ${input.fakturadato} kunne ikke hentes fra Nationalbanken. Indtast den manuelt.`,
+        );
+      }
+      kurs = manuel;
+      kurskilde = "manuelt indtastet";
+    }
+  }
+
+  const rubrik =
+    input.rubrik ?? foreslaaFakturaRubrik(input.land, input.kundeMomsnr);
+
+  try {
+    const gemt = await gemFaktura({
+      id: input.id,
+      nummer,
+      kunde: input.kunde.trim(),
+      land: (input.land || "DK").toUpperCase().trim(),
+      kundeMomsnr: input.kundeMomsnr?.trim() || undefined,
+      fakturadato: input.fakturadato,
+      forfaldsdato: input.forfaldsdato || undefined,
+      ydelse: input.ydelse?.trim() || undefined,
+      valuta,
+      beloebOere,
+      momsOere,
+      kurs,
+      kursdato,
+      kurskilde,
+      dkkOere: tilDkkOere(beloebOere, kurs),
+      momsDkkOere: tilDkkOere(momsOere, kurs),
+      rubrik,
+      note: input.note?.trim() || undefined,
+    });
+    revalidatePath(STI);
+    return { ok: true, data: { id: gemt.id, kurs, kursdato, forskudt } };
+  } catch (err) {
+    return fejl(err instanceof Error ? err.message : "kunne ikke gemme fakturaen");
+  }
+}
+
+export async function sletFakturaAction(id: string): Promise<Svar> {
+  if (!(await erAdmin())) return fejl("uautoriseret");
+  try {
+    await sletFaktura(id);
+  } catch (err) {
+    return fejl(err instanceof Error ? err.message : "kunne ikke slette");
+  }
+  revalidatePath(STI);
+  return { ok: true };
+}
+
+/**
+ * Kobl en bankpostering på en faktura som betaling, og opgør kursdifferencen.
+ *
+ * Når alle betalinger er knyttet på, kan forskellen mellem det bogførte beløb
+ * (fakturadatoens kurs) og det faktisk modtagne opgøres. Er nettoen over
+ * bagatelgrænsen, skal den oplyses som kapitalindkomst i det år, pengene blev
+ * vekslet.
+ */
+export async function knytBetalingAction(
+  fakturaId: string,
+  transaktionId: string,
+): Promise<Svar<{ differenceOere: number; skalOplyses: boolean }>> {
+  if (!(await erAdmin())) return fejl("uautoriseret");
+  try {
+    const faktura = await knytBetaling(fakturaId, transaktionId);
+    if (!faktura) return fejl("Fakturaen findes ikke.");
+
+    const alle = await hentTransaktioner();
+    const betalinger = alle.filter((t) => faktura.betalinger?.includes(t.id));
+    const modtagetOere = betalinger.reduce((sum, t) => sum + Math.abs(t.beloebOere), 0);
+    const bogfoert = faktura.dkkOere + faktura.momsDkkOere;
+    const difference = kursdifferenceOere(bogfoert, modtagetOere);
+
+    // Differencen realiseres i det år, den seneste betaling faldt.
+    const sidsteDato = betalinger.map((t) => t.dato).sort().pop() ?? faktura.fakturadato;
+
+    await gemKursdifference({
+      fakturaId,
+      aar: Number(sidsteDato.slice(0, 4)),
+      bogfoertOere: bogfoert,
+      modtagetOere,
+      differenceOere: difference,
+    });
+
+    revalidatePath(STI);
+    return {
+      ok: true,
+      data: { differenceOere: difference, skalOplyses: skalKursgevinstOplyses(difference) },
+    };
+  } catch (err) {
+    return fejl(err instanceof Error ? err.message : "kunne ikke knytte betalingen");
+  }
 }

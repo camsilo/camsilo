@@ -145,6 +145,24 @@ export function OdinMoms({
                   </p>
                 )}
 
+                {o.salgUdenFakturagrundlag && !ind && (
+                  <div className="regnskab-advarsel">
+                    <p>
+                      Der er ingen fakturaer med fakturadato i denne periode, så
+                      salget er opgjort ud fra bankposteringerne. Det er kun
+                      rigtigt, hvis kunden betalte i samme periode, som du
+                      fakturerede. Ved udenlandske kunder med lang betalingsfrist
+                      holder det sjældent — og så havner omsætningen i den
+                      forkerte periode.
+                    </p>
+                    <p>
+                      Læg fakturaerne ind under <strong>Fakturaer</strong>, så
+                      periodiseres salget efter fakturadatoen, som momsloven
+                      kræver.
+                    </p>
+                  </div>
+                )}
+
                 <div className="regnskab-rubrikker">
                   <div className="regnskab-rubrik">
                     <span className="regnskab-rubrik-navn">
@@ -155,6 +173,10 @@ export function OdinMoms({
                     </span>
                     <span className="hud-meta">
                       Moms af dit danske salg i perioden.
+                      {o.fakturaer.length > 0 &&
+                        ` Opgjort efter fakturadato fra ${o.fakturaer.length} ${
+                          o.fakturaer.length === 1 ? "faktura" : "fakturaer"
+                        }.`}
                     </span>
                   </div>
                   <div className="regnskab-rubrik">
@@ -202,6 +224,20 @@ export function OdinMoms({
                         Momsfrit salg af ydelser til EU-virksomheder. HUSK: skal
                         også indberettes særskilt i »EU-salg uden moms«
                         (EU-salgslisten) i TastSelv.
+                      </span>
+                    </div>
+                  )}
+                  {(ind?.rubrikCOere ?? o.rubrikCOere) > 0 && (
+                    <div className="regnskab-rubrik">
+                      <span className="regnskab-rubrik-navn">Rubrik C</span>
+                      <span className="regnskab-rubrik-tal">
+                        {heleKr(ind?.rubrikCOere ?? o.rubrikCOere)} kr.
+                      </span>
+                      <span className="hud-meta">
+                        Værdien af salg uden dansk moms til kunder UDEN FOR EU —
+                        efter Brexit også England. Oplysningsrubrik, ikke penge.
+                        Må IKKE indberettes i »EU-salg uden moms«; det system er
+                        kun for EU-lande.
                       </span>
                     </div>
                   )}

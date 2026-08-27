@@ -81,6 +81,118 @@ export type Transaktion = {
   ts: number;
 };
 
+/**
+ * Hvor en faktura hører hen i momsangivelsen.
+ *
+ * - salgsmoms: dansk kunde, 25 % dansk moms på fakturaen.
+ * - rubrikB:   ydelsessalg til momsregistreret kunde i et ANDET EU-LAND,
+ *              omvendt betalingspligt. Skal DESUDEN indberettes særskilt
+ *              til "EU-salg uden moms" senest den 25. i måneden efter.
+ * - rubrikC:   salg uden dansk moms, der ikke hører i rubrik B — herunder
+ *              alt salg til kunder UDEN FOR EU (efter Brexit også UK).
+ *              Må IKKE med i "EU-salg uden moms".
+ * - momsfri:   fritaget efter momslovens § 13 (undervisning, finansielle
+ *              ydelser m.v.) — ingen fradragsret for tilhørende køb.
+ */
+export type FakturaRubrik = "salgsmoms" | "rubrikB" | "rubrikC" | "momsfri";
+
+/**
+ * En udstedt salgsfaktura.
+ *
+ * HVORFOR DEN FINDES: en indtægt hører til det tidspunkt, den er ERHVERVET —
+ * ikke det tidspunkt, pengene lander på kontoen. Fakturerer du i december og
+ * får betalingen i marts, hører omsætningen til december: både skattemæssigt
+ * (retserhvervelsesprincippet, statsskattelovens § 4) og momsmæssigt
+ * (leveringstidspunktet, momslovens § 23).
+ *
+ * Bogfører man i stedet efter bankens dato, havner omsætningen i det forkerte
+ * indkomstår og den forkerte momsperiode. Derfor styrer FAKTURADATOEN — ikke
+ * betalingerne — hvor beløbet indgår i moms- og skatteopgørelsen.
+ *
+ * Betalingerne kobles på bagefter, så det kan ses, hvad der er betalt, og så
+ * kursforskellen mellem fakturering og veksling kan opgøres.
+ */
+export type Faktura = {
+  id: string;
+  /** Fakturanummer, fx "INV-001". Skal være fortløbende (momsbek. § 58). */
+  nummer: string;
+  kunde: string;
+  /** ISO-3166 alpha-2, fx "DK", "GB", "DE". Styrer momsbehandlingen. */
+  land: string;
+  /** Kundens moms-/VAT-nummer. Dokumentationskrav ved salg uden dansk moms. */
+  kundeMomsnr?: string;
+
+  /** ISO "yyyy-mm-dd". DEN STYRENDE DATO for indkomstår og momsperiode. */
+  fakturadato: string;
+  forfaldsdato?: string;
+  /** Hvad der er solgt — kommer med i redegørelsen. */
+  ydelse?: string;
+
+  /** Fakturavaluta, fx "DKK", "GBP". */
+  valuta: string;
+  /** Fakturabeløb UDEN moms, i valutaens mindste enhed (øre/pence/cent). */
+  beloebOere: number;
+  /** Momsbeløb i samme valuta og enhed. 0 ved salg uden dansk moms. */
+  momsOere: number;
+
+  /**
+   * Kurs brugt til omregning: DKK pr. 1 enhed fremmed valuta. 1 for DKK.
+   * Skal være Nationalbankens (eller ECB's) kurs på leveringstidspunktet —
+   * IKKE den kurs, banken eller Wise senere vekslede til.
+   */
+  kurs: number;
+  /** Hvilken dato kursen er hentet for (kan afvige ved weekend/helligdag). */
+  kursdato?: string;
+  /** Kursens oprindelse, fx "Nationalbanken DNVALD" eller "manuel". */
+  kurskilde?: string;
+
+  /** Fakturabeløbet ekskl. moms omregnet til DKK i øre. Det bogførte beløb. */
+  dkkOere: number;
+  /** Momsbeløbet omregnet til DKK i øre. */
+  momsDkkOere: number;
+
+  rubrik: FakturaRubrik;
+  /** Hvilke transaktions-id'er der er betalinger på fakturaen. */
+  betalinger?: string[];
+  /** Er fakturaen fuldt betalt? Sættes manuelt eller udledt af betalingerne. */
+  betalt?: boolean;
+
+  /** Bilagsfil (id i bilag-arkivet), hvis fakturaen er lagt ind som PDF. */
+  bilagId?: string;
+  note?: string;
+  ts: number;
+};
+
+/**
+ * Kursgevinst eller -tab på en fordring i fremmed valuta.
+ *
+ * Fakturerer du 32.460 £ den 19. december, hvor pundet står i 8,5288, bogføres
+ * 276.844,85 kr. Kommer pengene ind i løbet af foråret, hvor pundet står højere,
+ * får du flere kroner end de bogførte. Forskellen er en kursgevinst.
+ *
+ * For PERSONER er gevinst på en pengefordring kapitalindkomst efter
+ * kursgevinstlovens § 14, med en bagatelgrænse: er den samlede nettogevinst
+ * under grænsen, skal den slet ikke oplyses. Over grænsen skal hele beløbet med.
+ *
+ * BEMÆRK asymmetrien for erhvervsmæssige varedebitorer: nettoGEVINST er
+ * kapitalindkomst (§ 14), mens nettoTAB efter § 17 er en driftsomkostning i
+ * den personlige indkomst. De to skal derfor holdes adskilt.
+ */
+export type Kursdifference = {
+  id: string;
+  fakturaId: string;
+  /** Året differencen realiseres i — dvs. når pengene faktisk veksles. */
+  aar: number;
+  /** Bogført værdi ved fakturering (DKK-øre). */
+  bogfoertOere: number;
+  /** Faktisk modtaget efter veksling (DKK-øre). */
+  modtagetOere: number;
+  /** Positiv = gevinst, negativ = tab. */
+  differenceOere: number;
+  note?: string;
+  ts: number;
+};
+
 /** En gennemført import af et kontoudtog (til historik og fortryd). */
 export type ImportLog = {
   id: string;
@@ -126,6 +238,8 @@ export type MomsIndberetning = {
   rubrikAOere: number;
   /** Rubrik B-ydelser: EU-salg af ydelser uden moms (oplysningsrubrik). */
   rubrikBOere?: number;
+  /** Rubrik C: salg uden dansk moms uden for EU (oplysningsrubrik). */
+  rubrikCOere?: number;
   /** Markeret som betalt? */
   betalt?: boolean;
   note?: string;

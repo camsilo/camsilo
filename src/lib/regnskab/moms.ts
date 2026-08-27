@@ -15,7 +15,58 @@
  * Rubrik A-ydelser = nettoværdien af ydelseskøb i udlandet (EU) — oplysning,
  * ikke penge. Positivt tilsvar = du skylder Skat; negativt = du får retur.
  */
-import type { Momsperiode, MomsIndberetning, Transaktion } from "./typer";
+import type {
+  Faktura,
+  FakturaRubrik,
+  Momsperiode,
+  MomsIndberetning,
+  Transaktion,
+} from "./typer";
+
+/**
+ * EU's momsområde pr. 2026. Bemærk to ting, der ofte tages fejl af:
+ *
+ * - Storbritannien er IKKE med. Efter Brexit er UK et tredjeland, og salg
+ *   dertil hører i rubrik C — ikke i rubrik B, og ikke i "EU-salg uden moms".
+ *   Nordirland er kun i EU's momsområde for VARER, ikke for ydelser.
+ * - Danmark står ikke på listen, fordi dansk salg behandles for sig.
+ */
+const EU_LANDE = new Set([
+  "BE", "BG", "CY", "CZ", "DE", "EE", "ES", "FI", "FR", "GR", "HR", "HU",
+  "IE", "IT", "LT", "LU", "LV", "MT", "NL", "PL", "PT", "RO", "SE", "SI", "SK", "AT",
+]);
+
+export function erEuLand(land: string): boolean {
+  return EU_LANDE.has(land.toUpperCase().trim());
+}
+
+/**
+ * Hvilken momsrubrik hører et ydelsessalg i?
+ *
+ * Reglen for ydelser solgt til virksomheder er, at leveringsstedet er dér,
+ * hvor kunden hører hjemme (momslovens § 16, stk. 1). Derfor:
+ *
+ * - Dansk kunde        → dansk moms, 25 %.
+ * - EU-virksomhed med gyldigt momsnummer → uden dansk moms, omvendt
+ *   betalingspligt, rubrik B, og skal desuden på EU-salgslisten.
+ * - EU-kunde UDEN momsnummer → betragtes som privatkunde: dansk moms.
+ * - Uden for EU        → uden dansk moms, rubrik C.
+ *
+ * FORBEHOLD, der ikke kan afgøres maskinelt: momslovens § 16, stk. 3 flytter
+ * leveringsstedet TILBAGE til Danmark for visse rådgivnings- og
+ * databehandlingsydelser, hvis ydelsen faktisk udnyttes her i landet. Sælger
+ * du udvikling til et udenlandsk selskab, men arbejdet bruges i Danmark, kan
+ * der alligevel være dansk moms på. Det skal vurderes konkret.
+ */
+export function foreslaaFakturaRubrik(
+  land: string,
+  kundeMomsnr?: string,
+): FakturaRubrik {
+  const l = land.toUpperCase().trim();
+  if (l === "DK" || l === "") return "salgsmoms";
+  if (erEuLand(l)) return kundeMomsnr?.trim() ? "rubrikB" : "salgsmoms";
+  return "rubrikC";
+}
 
 export type Periode = {
   /** Nøgle, fx "2026-H1", "2026-K3" eller "2026-M07". */
@@ -117,31 +168,86 @@ export type MomsOpgoerelse = {
   rubrikAYdelserOere: number;
   /** Rubrik B-ydelser: momsfrit salg af ydelser til EU-virksomheder (oplysningsrubrik + EU-salgsliste). */
   rubrikBYdelserOere: number;
+  /**
+   * Rubrik C: værdien af salg uden dansk moms, der IKKE hører i rubrik B —
+   * i praksis alt salg til kunder uden for EU. Efter Brexit også UK.
+   * Må ikke indberettes til "EU-salg uden moms".
+   */
+  rubrikCOere: number;
   /** Grundlag til kontrol. */
   omsaetningNettoOere: number;
   antalPosteringer: number;
   uafklarede: number;
+  /** Fakturaer, hvis fakturadato falder i perioden. */
+  fakturaer: Faktura[];
+  /**
+   * Sat, når salget er opgjort ud fra bankposteringer frem for fakturaer.
+   * Så er periodiseringen kun rigtig, hvis betaling og fakturering faldt i
+   * samme periode — hvilket sjældent holder ved udenlandske kunder.
+   */
+  salgUdenFakturagrundlag?: boolean;
   /** Er perioden allerede markeret som indberettet? */
   indberetning?: MomsIndberetning;
 };
 
-/** Udregn momsopgørelsen for én periode af firma-bogen. */
+/**
+ * Udregn momsopgørelsen for én periode.
+ *
+ * SALGSSIDEN kommer fra FAKTURAERNE og periodiseres efter fakturadatoen, fordi
+ * momspligten indtræder ved leveringen — ikke når kunden betaler. En faktura
+ * udstedt i december hører til december, også selv om pengene først kommer i
+ * marts. Bruger man bankdatoen, ryger omsætningen i den forkerte periode.
+ *
+ * KØBSSIDEN kommer fra bankposteringerne, hvor betalingen normalt er tæt nok
+ * på leveringen til, at det ikke gør en forskel.
+ *
+ * Er der ingen fakturaer registreret i perioden, falder opgørelsen tilbage til
+ * den gamle adfærd og læser salget af posteringerne — så eksisterende regnskaber
+ * ikke pludselig viser nul. Det markeres med `salgUdenFakturagrundlag`.
+ */
 export function beregnMomsOpgoerelse(
   transaktioner: Transaktion[],
   periode: Periode,
   indberetninger: MomsIndberetning[] = [],
+  fakturaer: Faktura[] = [],
 ): MomsOpgoerelse {
   const iPerioden = transaktioner.filter(
     (t) => t.konto === "firma" && t.dato >= periode.fra && t.dato <= periode.til,
   );
+  const fakturaerIPerioden = fakturaer.filter(
+    (f) => f.fakturadato >= periode.fra && f.fakturadato <= periode.til,
+  );
+  const harFakturagrundlag = fakturaerIPerioden.length > 0;
 
   let salgsmoms = 0;
   let ydelsesmoms = 0;
   let koebsmoms = 0;
   let rubrikA = 0;
   let rubrikB = 0;
+  let rubrikC = 0;
   let omsaetning = 0;
   let uafklarede = 0;
+
+  // ── Salgssiden: fra fakturaerne, periodiseret efter fakturadato ──
+  for (const f of fakturaerIPerioden) {
+    switch (f.rubrik) {
+      case "salgsmoms":
+        salgsmoms += f.momsDkkOere;
+        omsaetning += f.dkkOere;
+        break;
+      case "rubrikB":
+        rubrikB += f.dkkOere;
+        omsaetning += f.dkkOere;
+        break;
+      case "rubrikC":
+        rubrikC += f.dkkOere;
+        omsaetning += f.dkkOere;
+        break;
+      case "momsfri":
+        omsaetning += f.dkkOere;
+        break;
+    }
+  }
 
   for (const t of iPerioden) {
     if (!t.afklaret) uafklarede++;
@@ -152,6 +258,8 @@ export function beregnMomsOpgoerelse(
     const ind = t.beloebOere >= 0 ? 1 : -1;
     switch (t.momsType) {
       case "salgsmoms":
+        // Springes over når fakturaerne bærer salget — ellers tælles det dobbelt.
+        if (harFakturagrundlag) break;
         salgsmoms += ind * moms;
         omsaetning += ind * (Math.abs(t.beloebOere) - moms);
         break;
@@ -171,6 +279,7 @@ export function beregnMomsOpgoerelse(
         koebsmoms += -ind * momsFradrag;
         break;
       case "momsfri":
+        if (harFakturagrundlag) break;
         if (t.beloebOere > 0) {
           omsaetning += t.beloebOere;
           // EU-salg af ydelser skal oplyses i rubrik B (og EU-salgslisten).
@@ -190,9 +299,12 @@ export function beregnMomsOpgoerelse(
     tilsvarOere: salgsmoms + ydelsesmoms - koebsmoms,
     rubrikAYdelserOere: rubrikA,
     rubrikBYdelserOere: rubrikB,
+    rubrikCOere: rubrikC,
     omsaetningNettoOere: omsaetning,
     antalPosteringer: iPerioden.length,
     uafklarede,
+    fakturaer: fakturaerIPerioden,
+    salgUdenFakturagrundlag: harFakturagrundlag ? undefined : true,
     indberetning: indberetninger.find((i) => i.periode === periode.noegle),
   };
 }
