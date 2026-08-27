@@ -26,17 +26,18 @@ services:
       min: 1
       max: 1
 
-    # ── KRITISK før drift: PERSISTENT DISK ──────────────────────────────────
-    # Uden en monteret disk ligger ./data på containerens FLYGTIGE filsystem og
-    # NULSTILLES ved hver redeploy/restart — dvs. modtagne kontaktbeskeder (og
-    # analytics) forsvinder lydløst. Tilføj en disk og sæt DATA_DIR til samme
-    # mountPath. VERIFICÉR HostStacks præcise disk-syntaks i deres docs før du
-    # afkommenterer (et forkert gæt kan vælte deployet):
+    # ── PERSISTENT DISK — PÅ PLADS ──────────────────────────────────────────
+    # Disken `camsilo-data` (vol_hyohoym9canv2pdvs05xcgta, 10 GB) er monteret på
+    # /app/data, og DATA_DIR peger samme sted. Det er dét, der gør, at
+    # kontaktbeskeder, analytics OG hele regnskabet — transaktioner, fakturaer,
+    # momsindberetninger og bilagsfilerne — overlever et redeploy.
     #
-    # disks:
-    #   - name: camsilo-data
-    #     mountPath: /app/data
-    #     sizeGB: 1
+    # RØR IKKE ved disken eller DATA_DIR uden at have en kopi af /app/data
+    # først. Bogføringsloven kræver, at bilag kan fremvises i 5 år; forsvinder
+    # disken, er dokumentationen for fradragene væk.
+    #
+    # Disken administreres i dashboardet/CLI'en, ikke herfra:
+    #   hoststack volumes list <service-id>
 
     env:
       NODE_ENV: production
@@ -49,6 +50,11 @@ services:
       # AUTH_SECRET-manglen får appen til at kaste ved cookie-tjek i prod:
       #   hoststack env set <service-id> ADMIN_PASSWORD=<stærk adgangskode> --secret
       #   hoststack env set <service-id> AUTH_SECRET=<openssl rand -base64 48> --secret
+      #
+      # VALGFRIT — automatisk aflæsning af kvitteringer i /admin/regnskab.
+      # Uden nøglen virker Bilag-fanen stadig: filerne gemmes, men felterne
+      # (leverandør, dato, beløb, moms) skal udfyldes i hånden.
+      #   hoststack env set <service-id> ANTHROPIC_API_KEY=sk-ant-... --secret
       #
       # VALGFRIT — notifikation ved nye beskeder (så de ikke kun ligger i admin).
       # Sættes der en webhook-URL (fx Slack/Discord/Make/Zapier), POSTer
