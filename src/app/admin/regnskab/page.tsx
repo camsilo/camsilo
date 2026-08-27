@@ -38,6 +38,7 @@ import { OdinOpsaetning } from "@/components/admin/regnskab/OdinOpsaetning";
 import { OdinFakturaer } from "@/components/admin/regnskab/OdinFakturaer";
 import { OdinFradrag } from "@/components/admin/regnskab/OdinFradrag";
 import { OdinBilag } from "@/components/admin/regnskab/OdinBilag";
+import { OdinStartdata } from "@/components/admin/regnskab/OdinStartdata";
 
 export const dynamic = "force-dynamic";
 

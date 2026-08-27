@@ -29,6 +29,7 @@ import {
   gemKursdifference,
   gemIndstillinger,
   gemLaertRegel,
+  hentFakturaer,
   hentIndstillinger,
   hentLaerteRegler,
   hentTransaktioner,
@@ -46,6 +47,7 @@ import {
   tilfoejTransaktioner,
 } from "@/lib/regnskab/store";
 import type {
+  Faktura,
   FakturaRubrik,
   Indstillinger,
   Konto,
@@ -689,4 +691,145 @@ export async function opdaterBilagAction(
   }
   revalidatePath(STI);
   return { ok: true };
+}
+
+// ── Indlæsning af startdata ─────────────────────────────────────
+//
+// Tager imod den JSON-fil, der er bygget ud fra kontoudtog, fakturaer og
+// kurser. Filen indeholder persondata og ligger derfor ALDRIG i repoet —
+// den vælges fra din egen maskine og sendes direkte hertil.
+//
+// Idempotent: fakturaer dedupes på nummer, posteringer på fingeraftryk.
+
+export type StartdataKvittering = {
+  fakturaerNye: number;
+  fakturaerFandtes: number;
+  posteringerIndsat: number;
+  posteringerDubletter: number;
+  kursdifferencer: number;
+  advarsler: string[];
+};
+
+export async function importerStartdataAction(
+  formData: FormData,
+): Promise<Svar<StartdataKvittering>> {
+  if (!(await erAdmin())) return fejl("uautoriseret");
+
+  const fil = formData.get("fil");
+  if (!(fil instanceof File) || fil.size === 0) return fejl("Vælg JSON-filen først.");
+  if (fil.size > 8 * 1024 * 1024) return fejl("Filen er større end 8 MB.");
+
+  let data: {
+    fakturaer?: Omit<Faktura, "id" | "ts">[];
+    transaktioner?: Omit<Transaktion, "id" | "importId" | "fingeraftryk" | "ts">[];
+    kursdifferencer?: {
+      fakturaNummer: string;
+      aar: number;
+      bogfoertOere: number;
+      modtagetOere: number;
+      differenceOere: number;
+      note?: string;
+    }[];
+    indstillinger?: Partial<Indstillinger>;
+  };
+  try {
+    data = JSON.parse(await fil.text());
+  } catch {
+    return fejl("Filen er ikke gyldig JSON.");
+  }
+
+  const kvit: StartdataKvittering = {
+    fakturaerNye: 0,
+    fakturaerFandtes: 0,
+    posteringerIndsat: 0,
+    posteringerDubletter: 0,
+    kursdifferencer: 0,
+    advarsler: [],
+  };
+
+  try {
+    if (data.indstillinger) {
+      const nu = await hentIndstillinger();
+      await gemIndstillinger({ ...nu, ...data.indstillinger });
+    }
+
+    const kendte = new Map((await hentFakturaer()).map((f) => [f.nummer, f]));
+    for (const f of data.fakturaer ?? []) {
+      if (kendte.has(f.nummer)) {
+        kvit.fakturaerFandtes++;
+        continue;
+      }
+      try {
+        kendte.set(f.nummer, await gemFaktura(f));
+        kvit.fakturaerNye++;
+      } catch (e) {
+        kvit.advarsler.push(
+          `${f.nummer}: ${e instanceof Error ? e.message : "kunne ikke gemmes"}`,
+        );
+      }
+    }
+
+    if (data.transaktioner?.length) {
+      const importId = randomUUID();
+      const nu = Date.now();
+      const klar: Transaktion[] = [];
+      // Fingeraftryk beregnes pr. bog — samme tekst og beløb kan optræde i
+      // begge bøger uden at være samme postering.
+      for (const konto of ["privat", "firma"] as Konto[]) {
+        const iBogen = data.transaktioner.filter((t) => t.konto === konto);
+        if (!iBogen.length) continue;
+        const aftryk = beregnFingeraftryk(
+          konto,
+          iBogen.map((t) => ({
+            dato: t.dato,
+            tekst: t.tekst,
+            beloebOere: t.beloebOere,
+          })),
+        );
+        iBogen.forEach((t, i) =>
+          klar.push({ ...t, id: randomUUID(), importId, fingeraftryk: aftryk[i], ts: nu }),
+        );
+      }
+      const r = await tilfoejTransaktioner(klar);
+      kvit.posteringerIndsat = r.indsat;
+      kvit.posteringerDubletter = r.dubletter;
+
+      if (r.indsat > 0) {
+        const datoer = klar.map((t) => t.dato).sort();
+        await gemImportLog({
+          id: importId,
+          konto: "firma",
+          filnavn: fil.name || "startdata.json",
+          nye: r.indsat,
+          dubletter: r.dubletter,
+          fejllinjer: 0,
+          fra: datoer[0],
+          til: datoer[datoer.length - 1],
+          ts: nu,
+        });
+      }
+    }
+
+    for (const k of data.kursdifferencer ?? []) {
+      const f = kendte.get(k.fakturaNummer);
+      if (!f) {
+        kvit.advarsler.push(`Kursdifference for ${k.fakturaNummer}: fakturaen findes ikke.`);
+        continue;
+      }
+      await gemKursdifference({
+        fakturaId: f.id,
+        aar: k.aar,
+        bogfoertOere: k.bogfoertOere,
+        modtagetOere: k.modtagetOere,
+        differenceOere: k.differenceOere,
+        note: k.note,
+      });
+      kvit.kursdifferencer++;
+    }
+  } catch (err) {
+    return fejl(err instanceof Error ? err.message : "indlæsningen fejlede");
+  }
+
+  revalidatePath(STI);
+  return { ok: true, data: kvit };
 }
