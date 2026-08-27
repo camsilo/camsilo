@@ -193,6 +193,55 @@ export type Kursdifference = {
   ts: number;
 };
 
+/**
+ * Et bilag: billedet eller PDF'en af en kvittering eller faktura.
+ *
+ * Bogføringsloven kræver, at bilag opbevares i 5 år, og at de kan knyttes til
+ * posteringen (transaktionssporet). Momsbekendtgørelsens § 92, stk. 5 siger
+ * udtrykkeligt, at fakturaer må opbevares "enten på papir eller elektronisk,
+ * uanset om fakturaen oprindeligt er fremsendt som papirfaktura" — et foto er
+ * altså nok, og papiret må gerne smides ud bagefter.
+ *
+ * Der gemmes et SHA-256-fingeraftryk af filen, så det kan dokumenteres, at
+ * billedet ikke er ændret efter, det blev lagt ind.
+ */
+export type Bilag = {
+  id: string;
+  /** Filnavn på disken under DATA_DIR/regnskab/bilag/. */
+  gemtSom: string;
+  originaltNavn: string;
+  mediaType: string;
+  stoerrelse: number;
+  /** SHA-256 af filens indhold — dokumenterer at bilaget ikke er ændret. */
+  fingeraftryk: string;
+
+  /** Hvad der blev læst ud af billedet. Tomt hvis aflæsning ikke var mulig. */
+  aflaest?: {
+    leverandoer?: string;
+    dato?: string;
+    /** Samlet beløb i valutaens mindste enhed. */
+    beloebOere?: number;
+    momsOere?: number;
+    valuta?: string;
+    fakturanummer?: string;
+    cvrEllerVat?: string;
+    forslagKategori?: string;
+    erhvervsmaessigt?: boolean | null;
+    begrundelse?: string;
+    /** Hvad der ikke kunne læses tydeligt — vises frem for at blive gættet. */
+    usikkert?: string[];
+    fejl?: string;
+  };
+
+  /** Knyttet til en postering eller en faktura. */
+  transaktionId?: string;
+  fakturaId?: string;
+  /** Er bilaget gennemgået og godkendt af dig? */
+  godkendt?: boolean;
+  note?: string;
+  ts: number;
+};
+
 /** En gennemført import af et kontoudtog (til historik og fortryd). */
 export type ImportLog = {
   id: string;

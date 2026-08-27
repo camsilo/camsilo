@@ -13,6 +13,7 @@ import {
   hentTransaktioner,
   hentFakturaer,
   hentKursdifferencer,
+  hentBilag,
 } from "@/lib/regnskab/store";
 import {
   beregnMomsOpgoerelse,
@@ -36,6 +37,7 @@ import { OdinRedegoerelse } from "@/components/admin/regnskab/OdinRedegoerelse";
 import { OdinOpsaetning } from "@/components/admin/regnskab/OdinOpsaetning";
 import { OdinFakturaer } from "@/components/admin/regnskab/OdinFakturaer";
 import { OdinFradrag } from "@/components/admin/regnskab/OdinFradrag";
+import { OdinBilag } from "@/components/admin/regnskab/OdinBilag";
 
 export const dynamic = "force-dynamic";
 
@@ -56,6 +58,7 @@ const DELE = [
   { id: "skat", navn: "Skat" },
   { id: "fradrag", navn: "Fradrag" },
   { id: "frister", navn: "Frister" },
+  { id: "bilag", navn: "Bilag" },
   { id: "import", navn: "Import" },
   { id: "viden", navn: "Viden" },
   { id: "opsaetning", navn: "Opsætning" },
@@ -83,6 +86,7 @@ export default async function RegnskabSide({
     laerte,
     fakturaer,
     kursdifferencer,
+    bilag,
   ] = await Promise.all([
     hentIndstillinger(),
     hentTransaktioner(),
@@ -91,6 +95,7 @@ export default async function RegnskabSide({
     hentLaerteRegler(),
     hentFakturaer(),
     hentKursdifferencer(),
+    hentBilag(),
   ]);
 
   // Før Odins onboarding er svaret, er opsætningen eneste visning.
@@ -206,6 +211,8 @@ export default async function RegnskabSide({
               aar={iAar}
             />
           )}
+
+          {del === "bilag" && <OdinBilag bilag={bilag} />}
 
           {del === "statistik" && (
             <OdinStatistik transaktioner={transaktioner} idag={idag} />

@@ -13,10 +13,11 @@
  * VIGTIGT: En korrupt fil må ALDRIG læses som "tom" — så ville næste
  * skrivning udslette historikken. Læsefejl kastes altid videre.
  */
-import { mkdir, readFile, writeFile, rename } from "fs/promises";
+import { mkdir, readFile, writeFile, rename, unlink } from "fs/promises";
 import path from "path";
-import { randomUUID } from "crypto";
+import { createHash, randomUUID } from "crypto";
 import type {
+  Bilag,
   Faktura,
   ImportLog,
   Indstillinger,
@@ -246,6 +247,95 @@ export async function knytBetaling(
     arr[i] = { ...arr[i], betalinger: [...betalinger] };
     await skrivJson(F_FIL, arr);
     return arr[i];
+  });
+}
+
+// ── Bilag ───────────────────────────────────────────────────────
+//
+// Selve filerne ligger under DATA_DIR/regnskab/bilag/, metadata i bilag.json.
+// Bilag skal gemmes i 5 år, så mappen hører til på den persistente disk —
+// ligger DATA_DIR på containerens flygtige filsystem, forsvinder de ved
+// næste redeploy.
+
+const B_FIL = "bilag.json";
+
+function bilagMappe(): string {
+  return path.join(mappe(), "bilag");
+}
+
+export function bilagSti(gemtSom: string): string {
+  return path.join(bilagMappe(), path.basename(gemtSom));
+}
+
+export async function hentBilag(): Promise<Bilag[]> {
+  return iKoe(async () => {
+    const arr = await laesJson<Bilag[]>(B_FIL, []);
+    if (!Array.isArray(arr)) throw new Error(`${B_FIL} er ikke et array`);
+    return arr.sort((a, b) => b.ts - a.ts);
+  });
+}
+
+export async function gemBilag(
+  bytes: Buffer,
+  meta: Omit<Bilag, "id" | "gemtSom" | "fingeraftryk" | "stoerrelse" | "ts">,
+): Promise<Bilag> {
+  return iKoe(async () => {
+    await mkdir(bilagMappe(), { recursive: true });
+    const id = randomUUID();
+    const ext =
+      meta.mediaType === "application/pdf"
+        ? ".pdf"
+        : meta.mediaType.includes("png")
+          ? ".png"
+          : meta.mediaType.includes("webp")
+            ? ".webp"
+            : ".jpg";
+    const gemtSom = id + ext;
+    await writeFile(path.join(bilagMappe(), gemtSom), bytes);
+
+    const ny: Bilag = {
+      ...meta,
+      id,
+      gemtSom,
+      stoerrelse: bytes.length,
+      fingeraftryk: createHash("sha256").update(bytes).digest("hex"),
+      ts: Date.now(),
+    };
+    const arr = await laesJson<Bilag[]>(B_FIL, []);
+    arr.push(ny);
+    await skrivJson(B_FIL, arr);
+    return ny;
+  });
+}
+
+export async function opdaterBilag(
+  id: string,
+  aendring: Partial<Omit<Bilag, "id" | "gemtSom" | "fingeraftryk" | "ts">>,
+): Promise<Bilag | null> {
+  return iKoe(async () => {
+    const arr = await laesJson<Bilag[]>(B_FIL, []);
+    const i = arr.findIndex((b) => b.id === id);
+    if (i < 0) return null;
+    arr[i] = { ...arr[i], ...aendring };
+    await skrivJson(B_FIL, arr);
+    return arr[i];
+  });
+}
+
+export async function sletBilag(id: string): Promise<void> {
+  return iKoe(async () => {
+    const arr = await laesJson<Bilag[]>(B_FIL, []);
+    const b = arr.find((x) => x.id === id);
+    if (!b) return;
+    try {
+      await unlink(path.join(bilagMappe(), b.gemtSom));
+    } catch {
+      // Filen var allerede væk — metadata ryddes alligevel.
+    }
+    await skrivJson(
+      B_FIL,
+      arr.filter((x) => x.id !== id),
+    );
   });
 }
 

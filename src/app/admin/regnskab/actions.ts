@@ -14,6 +14,7 @@ import {
   normaliserTekst,
 } from "@/lib/regnskab/regler";
 import { foreslaaFakturaRubrik, perioderForAar } from "@/lib/regnskab/moms";
+import { aflaesBilag } from "@/lib/regnskab/bilag-aflaes";
 import {
   hentKurs,
   kursdifferenceOere,
@@ -22,6 +23,7 @@ import {
 } from "@/lib/regnskab/valuta";
 import {
   fjernImportLog,
+  gemBilag,
   gemFaktura,
   gemImportLog,
   gemKursdifference,
@@ -32,9 +34,11 @@ import {
   hentTransaktioner,
   knytBetaling,
   markerPeriodeIndberettet,
+  opdaterBilag,
   oplaasIndberetning,
   opdaterIndberetning,
   opdaterTransaktion,
+  sletBilag,
   sletFaktura,
   sletImport,
   sletIndberetning,
@@ -598,4 +602,91 @@ export async function knytBetalingAction(
   } catch (err) {
     return fejl(err instanceof Error ? err.message : "kunne ikke knytte betalingen");
   }
+}
+
+// ── Bilag ───────────────────────────────────────────────────────
+//
+// Et foto af en kvittering er nok som dokumentation — momsbekendtgørelsens
+// § 92, stk. 5 tillader udtrykkeligt elektronisk opbevaring, uanset om
+// fakturaen oprindeligt kom på papir. Papiret må altså gerne smides ud,
+// når billedet er tydeligt.
+
+const MAKS_BILAG_BYTES = 12 * 1024 * 1024;
+
+export type BilagResultat = {
+  id: string;
+  leverandoer?: string;
+  beloebOere?: number;
+  fejl?: string;
+};
+
+/** Læg et bilag ind og lad det aflæse automatisk. */
+export async function uploadBilagAction(
+  formData: FormData,
+): Promise<Svar<BilagResultat>> {
+  if (!(await erAdmin())) return fejl("uautoriseret");
+
+  const fil = formData.get("fil");
+  if (!(fil instanceof File) || fil.size === 0) return fejl("Vælg en fil først.");
+  if (fil.size > MAKS_BILAG_BYTES) {
+    return fejl(
+      `Filen fylder ${(fil.size / 1024 / 1024).toFixed(1)} MB. Grænsen er 12 MB.`,
+    );
+  }
+
+  const mediaType = fil.type || "application/octet-stream";
+  const bytes = Buffer.from(await fil.arrayBuffer());
+
+  const aflaest = await aflaesBilag(bytes, mediaType);
+
+  try {
+    const gemt = await gemBilag(bytes, {
+      originaltNavn: fil.name || "bilag",
+      mediaType,
+      aflaest,
+      transaktionId: (formData.get("transaktionId") as string) || undefined,
+      fakturaId: (formData.get("fakturaId") as string) || undefined,
+    });
+    revalidatePath(STI);
+    return {
+      ok: true,
+      data: {
+        id: gemt.id,
+        leverandoer: aflaest.leverandoer,
+        beloebOere: aflaest.beloebOere,
+        fejl: aflaest.fejl,
+      },
+    };
+  } catch (err) {
+    return fejl(err instanceof Error ? err.message : "kunne ikke gemme bilaget");
+  }
+}
+
+export async function sletBilagAction(id: string): Promise<Svar> {
+  if (!(await erAdmin())) return fejl("uautoriseret");
+  try {
+    await sletBilag(id);
+  } catch (err) {
+    return fejl(err instanceof Error ? err.message : "kunne ikke slette");
+  }
+  revalidatePath(STI);
+  return { ok: true };
+}
+
+/** Markér et bilag som gennemgået, eller knyt det til en postering. */
+export async function opdaterBilagAction(
+  id: string,
+  aendring: { godkendt?: boolean; note?: string; transaktionId?: string },
+): Promise<Svar> {
+  if (!(await erAdmin())) return fejl("uautoriseret");
+  try {
+    await opdaterBilag(id, {
+      ...aendring,
+      note: aendring.note?.slice(0, 500),
+    });
+  } catch (err) {
+    return fejl(err instanceof Error ? err.message : "kunne ikke gemme");
+  }
+  revalidatePath(STI);
+  return { ok: true };
 }
