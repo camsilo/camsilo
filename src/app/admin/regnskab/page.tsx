@@ -262,7 +262,12 @@ export default async function RegnskabSide({
             <OdinFrister frister={frister} idag={idag} />
           )}
 
-          {del === "import" && <OdinImport importLog={importLog} />}
+          {del === "import" && (
+            <>
+              <OdinStartdata />
+              <OdinImport importLog={importLog} />
+            </>
+          )}
 
           {del === "viden" && <OdinViden />}
 

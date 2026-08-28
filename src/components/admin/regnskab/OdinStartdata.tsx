@@ -111,7 +111,7 @@ export function OdinStartdata() {
   }
 
   return (
-    <section className="hud-panel">
+    <section className="hud-panel hud-panel-accent">
       <div className="hud-head">
         <span className="hud-label">
           <span className="hud-rune">ᛟ</span> Startdata

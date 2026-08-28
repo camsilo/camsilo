@@ -93,6 +93,17 @@ export async function importerKontoudtogAction(
   if (!(fil instanceof File) || fil.size === 0) return fejl("vælg en CSV-fil");
   if (fil.size > MAKS_FIL_BYTES) return fejl("filen er for stor (maks 8 MB)");
 
+  // Startdatafilen er JSON og hører til i feltet ovenfor. Uden det her ville
+  // den bare blive afvist som "ingen gyldige posteringer", hvilket ikke
+  // fortæller nogen, hvad de skal gøre i stedet.
+  if (fil.name.toLowerCase().endsWith(".json")) {
+    return fejl(
+      "Det her er en JSON-fil, ikke et kontoudtog. Skal den ind, hører den til " +
+        "under »Startdata« øverst på siden — det felt tager imod fakturaer, " +
+        "posteringer og kurser på én gang.",
+    );
+  }
+
   let resultat;
   try {
     resultat = parseKontoudtog(new Uint8Array(await fil.arrayBuffer()));
