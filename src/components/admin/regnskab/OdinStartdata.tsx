@@ -11,17 +11,33 @@
  * posteringer på fingeraftryk, så intet bliver lagt ind to gange.
  */
 import { useRef, useState } from "react";
-import {
-  importerStartdataAction,
-  type StartdataKvittering,
-} from "@/app/admin/regnskab/actions";
+import { useRouter } from "next/navigation";
+
+type StartdataKvittering = {
+  fakturaerNye: number;
+  fakturaerFandtes: number;
+  posteringerIndsat: number;
+  posteringerDubletter: number;
+  kursdifferencer: number;
+  advarsler: string[];
+};
 
 export function OdinStartdata() {
   const [travlt, setTravlt] = useState(false);
   const [fejl, setFejl] = useState("");
   const [kvit, setKvit] = useState<StartdataKvittering | null>(null);
   const filRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
+  /**
+   * Sendes til en almindelig route frem for en server action.
+   *
+   * Server actions får et nyt id ved hver udrulning, så en fane, der har
+   * stået åben hen over et deploy, fejler med "Failed to find Server Action"
+   * — uden at ramme vores egen kode, så fejlen kan ikke fanges pænt. En route
+   * har en fast URL og overlever udrulninger. Den slipper samtidig for
+   * server actions' 1 MB-grænse på anmodningen.
+   */
   async function indlaes() {
     const fil = filRef.current?.files?.[0];
     if (!fil) {
@@ -31,16 +47,67 @@ export function OdinStartdata() {
     setTravlt(true);
     setFejl("");
     setKvit(null);
-    const fd = new FormData();
-    fd.set("fil", fil);
-    const svar = await importerStartdataAction(fd);
-    setTravlt(false);
-    if (!svar.ok) {
-      setFejl(svar.fejl);
-      return;
+    try {
+      const tekst = await fil.text();
+      try {
+        JSON.parse(tekst);
+      } catch {
+        setTravlt(false);
+        setFejl("Filen er ikke gyldig JSON. Valgte du den rigtige fil?");
+        return;
+      }
+
+      const r = await fetch("/admin/regnskab/import-data", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: tekst,
+      });
+
+      if (r.status === 401) {
+        setTravlt(false);
+        setFejl("Din session er udløbet. Log ind igen og prøv forfra.");
+        return;
+      }
+      if (!r.ok) {
+        const t = await r.text();
+        setTravlt(false);
+        setFejl(`Serveren svarede ${r.status}. ${t.slice(0, 200)}`);
+        return;
+      }
+
+      const svar = (await r.json()) as {
+        ok?: boolean;
+        fejl?: string;
+        kvittering?: {
+          fakturaer: { nye: number; fandtes: number };
+          transaktioner: { indsat: number; dubletter: number };
+          kursdifferencer: number;
+          advarsler: string[];
+        };
+      };
+      setTravlt(false);
+      if (!svar.ok || !svar.kvittering) {
+        setFejl(svar.fejl ?? "Indlæsningen fejlede.");
+        return;
+      }
+      const k = svar.kvittering;
+      setKvit({
+        fakturaerNye: k.fakturaer.nye,
+        fakturaerFandtes: k.fakturaer.fandtes,
+        posteringerIndsat: k.transaktioner.indsat,
+        posteringerDubletter: k.transaktioner.dubletter,
+        kursdifferencer: k.kursdifferencer,
+        advarsler: k.advarsler,
+      });
+      if (filRef.current) filRef.current.value = "";
+      // Hent siden igen, så de nye tal slår igennem i alle faner.
+      router.refresh();
+    } catch (e) {
+      setTravlt(false);
+      setFejl(
+        "Filen kunne ikke sendes: " + (e instanceof Error ? e.message : "ukendt fejl"),
+      );
     }
-    setKvit(svar.data!);
-    if (filRef.current) filRef.current.value = "";
   }
 
   return (
