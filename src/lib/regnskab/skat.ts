@@ -14,7 +14,8 @@
  * dele, der ligger over trinnenes grænser. Personfradraget antages brugt af
  * lønnen. Det er et pejlemærke — forskudsopgørelsen er dommeren.
  */
-import type { Indstillinger, Transaktion } from "./typer";
+import type { Faktura, Indstillinger, Kursdifference, Transaktion } from "./typer";
+import { KURSGEVINST_BAGATELGRAENSE_OERE } from "./valuta";
 import { satserFor } from "./satser";
 
 export type SkatteOpgoerelse = {
@@ -32,6 +33,23 @@ export type SkatteOpgoerelse = {
   topskatRamt: boolean;
   antalPosteringer: number;
   uafklarede: number;
+  /** Fakturaer med fakturadato i året — grundlaget for omsætningen. */
+  fakturaer: Faktura[];
+  /**
+   * Sat, når omsætningen er læst af bankposteringerne frem for fakturaerne.
+   * Så er periodiseringen kun rigtig, hvis betaling og fakturering faldt i
+   * samme år — hvilket sjældent holder ved udenlandske kunder.
+   */
+  omsaetningUdenFakturagrundlag?: boolean;
+  /**
+   * Realiseret kursgevinst eller -tab i året. Hører IKKE til virksomhedens
+   * resultat: for personer er nettogevinst på en fordring i fremmed valuta
+   * kapitalindkomst efter kursgevinstlovens § 14 og oplyses i rubrik 39.
+   * Vises derfor for sig, så den ikke forsvinder i overskuddet.
+   */
+  kursgevinstOere: number;
+  /** Overstiger nettoen bagatelgrænsen, så den skal oplyses? */
+  kursgevinstSkalOplyses: boolean;
 };
 
 /**
@@ -75,6 +93,8 @@ export function beregnSkatteOpgoerelse(
   transaktioner: Transaktion[],
   aar: number,
   indstillinger: Indstillinger,
+  fakturaer: Faktura[] = [],
+  kursdifferencer: Kursdifference[] = [],
 ): SkatteOpgoerelse {
   const fra = `${aar}-01-01`;
   const til = `${aar}-12-31`;
@@ -84,14 +104,33 @@ export function beregnSkatteOpgoerelse(
     (t) => t.konto === "firma" && t.dato >= fra && t.dato <= til,
   );
 
+  // Omsætningen periodiseres efter FAKTURADATOEN — en indtægt hører til det
+  // år, den er erhvervet, ikke det år pengene kom ind (statsskattelovens § 4).
+  const fakturaerIAaret = fakturaer.filter(
+    (f) => f.fakturadato >= fra && f.fakturadato <= til,
+  );
+  const harFakturagrundlag = fakturaerIAaret.length > 0;
+
   let omsaetning = 0;
   let udgifter = 0;
   let uafklarede = 0;
+
+  if (harFakturagrundlag) {
+    // Beløbet uden moms — momsen er statens penge og aldrig omsætning.
+    for (const f of fakturaerIAaret) omsaetning += f.dkkOere;
+  }
+
   for (const t of firmaAar) {
     if (!t.afklaret) uafklarede++;
-    omsaetning += omsaetningOere(t);
+    if (!harFakturagrundlag) omsaetning += omsaetningOere(t);
     udgifter += fradragsbeloebOere(t);
   }
+
+  // Kursgevinsten er kapitalindkomst, ikke virksomhedsindkomst — den holdes
+  // uden for resultatet og vises for sig.
+  const kursgevinst = kursdifferencer
+    .filter((k) => k.aar === aar)
+    .reduce((sum, k) => sum + k.differenceOere, 0);
 
   const resultat = omsaetning - udgifter;
 
@@ -109,6 +148,10 @@ export function beregnSkatteOpgoerelse(
       topskatRamt: false,
       antalPosteringer: firmaAar.length,
       uafklarede,
+      fakturaer: fakturaerIAaret,
+      omsaetningUdenFakturagrundlag: harFakturagrundlag ? undefined : true,
+      kursgevinstOere: kursgevinst,
+      kursgevinstSkalOplyses: Math.abs(kursgevinst) > KURSGEVINST_BAGATELGRAENSE_OERE,
     };
   }
 
@@ -147,6 +190,10 @@ export function beregnSkatteOpgoerelse(
     topskatRamt: trinSkat > 0,
     antalPosteringer: firmaAar.length,
     uafklarede,
+    fakturaer: fakturaerIAaret,
+    omsaetningUdenFakturagrundlag: harFakturagrundlag ? undefined : true,
+    kursgevinstOere: kursgevinst,
+    kursgevinstSkalOplyses: Math.abs(kursgevinst) > KURSGEVINST_BAGATELGRAENSE_OERE,
   };
 }
 

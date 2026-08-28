@@ -39,6 +39,7 @@ import { OdinFakturaer } from "@/components/admin/regnskab/OdinFakturaer";
 import { OdinFradrag } from "@/components/admin/regnskab/OdinFradrag";
 import { OdinBilag } from "@/components/admin/regnskab/OdinBilag";
 import { OdinStartdata } from "@/components/admin/regnskab/OdinStartdata";
+import { OdinAarsopgoerelse } from "@/components/admin/regnskab/OdinAarsopgoerelse";
 
 export const dynamic = "force-dynamic";
 
@@ -58,6 +59,7 @@ const DELE = [
   { id: "redegoerelse", navn: "Redegørelse" },
   { id: "skat", navn: "Skat" },
   { id: "fradrag", navn: "Fradrag" },
+  { id: "aarsopgoerelse", navn: "Årsopgørelse" },
   { id: "frister", navn: "Frister" },
   { id: "bilag", navn: "Bilag" },
   { id: "import", navn: "Import" },
@@ -168,7 +170,7 @@ export default async function RegnskabSide({
           {del === "oversigt" && (
             <OdinRegnskabOversigt
               indstillinger={indstillinger}
-              skat={beregnSkatteOpgoerelse(transaktioner, iAar, indstillinger)}
+              skat={beregnSkatteOpgoerelse(transaktioner, iAar, indstillinger, fakturaer, kursdifferencer)}
               moms={relevantePerioder(indstillinger.foersteAar, indstillinger.momsperiode, idag)
                 .slice(0, 1)
                 .map((p) => beregnMomsOpgoerelse(transaktioner, p, indberetninger, fakturaer))[0] ?? null}
@@ -206,6 +208,15 @@ export default async function RegnskabSide({
             />
           )}
 
+          {del === "aarsopgoerelse" && (
+            <OdinAarsopgoerelse
+              skat={beregnSkatteOpgoerelse(transaktioner, iAar, indstillinger, fakturaer, kursdifferencer)}
+              maalere={beregnFradragsMaalere(transaktioner, iAar)}
+              aar={iAar}
+              idag={idag}
+            />
+          )}
+
           {del === "fradrag" && (
             <OdinFradrag
               maalere={beregnFradragsMaalere(transaktioner, iAar)}
@@ -235,10 +246,10 @@ export default async function RegnskabSide({
 
           {del === "skat" && (
             <OdinSkat
-              opgoerelse={beregnSkatteOpgoerelse(transaktioner, iAar, indstillinger)}
+              opgoerelse={beregnSkatteOpgoerelse(transaktioner, iAar, indstillinger, fakturaer, kursdifferencer)}
               sidsteAar={
                 iAar > indstillinger.foersteAar
-                  ? beregnSkatteOpgoerelse(transaktioner, iAar - 1, indstillinger)
+                  ? beregnSkatteOpgoerelse(transaktioner, iAar - 1, indstillinger, fakturaer, kursdifferencer)
                   : null
               }
               prKategori={udgifterPrKategori(transaktioner, iAar)}

@@ -8,9 +8,13 @@
  * de er bevidst hårdkodet, så siden viser præcis det, der blev gennemgået,
  * uafhængigt af hvad der senere importeres i Odins datalag.
  *
- * KURS: 8,618 hele vejen igennem. Den er udledt af årsopgørelsens rubrik 111
- * (193.906 kr. / 22.500 £), så momsens rubrik C og skattens rubrik 111 hviler
- * på samme omregning. Bekræftes med Nationalbankens kurs for 19-12-2025.
+ * KURS: 8,5288 hele vejen igennem — Danmarks Nationalbanks officielle
+ * middelkurs for 19-12-2025, hentet fra Statistikbankens DNVALD-serie og
+ * verificeret 27-08-2026. Den afløser den tidligere antagelse på 8,618, som
+ * var regnet BAGLÆNS ud af det, der blev indberettet (193.906 kr. / 22.500 £)
+ * — og altså udledt af en indberetning, der i forvejen var for lav. Kursen er
+ * den eneste, momsbekendtgørelsens § 97, stk. 4 tillader, og rubrik C og
+ * rubrik 111 hviler nu på samme, dokumenterbare omregning.
  */
 
 type Felt = { navn: string; tal: number; note?: string };
@@ -50,7 +54,7 @@ const PERIODER: Periode[] = [
       { navn: "Rubrik A — ydelser", tal: 0, note: "Cursor og Render er amerikanske. USA er ikke EU." },
       { navn: "Rubrik B — varer (begge felter)", tal: 0 },
       { navn: "Rubrik B — ydelser", tal: 0, note: "UK er tredjeland efter Brexit. Må ikke i EU-salg uden moms." },
-      { navn: "Rubrik C", tal: 279742, note: "32.460 £ ved kurs 8,618. Faktura INV-001." },
+      { navn: "Rubrik C", tal: 276845, note: "32.460 £ ved Nationalbankens kurs 8,5288 for 19-12-2025. Faktura INV-001." },
       { navn: "Moms i alt", tal: 0 },
     ],
   },
@@ -139,13 +143,13 @@ const SKAT_NU: [string, string][] = [
 ];
 
 const SKAT_RETTET: [string, string][] = [
-  ["Overskud af virksomhed (rubrik 111)", "279.742"],
+  ["Overskud af virksomhed (rubrik 111)", "276.845"],
   ["Pensioner, dagpenge, stipendier (rubrik 16)", "88.024"],
-  ["Skattepligtig indkomst", "ca. 307.403"],
-  ["Beregnet skat", "ca. 127.094"],
+  ["Skattepligtig indkomst", "ca. 304.740"],
+  ["Beregnet skat", "ca. 125.863"],
   ["Allerede betalt i alt", "92.101"],
-  ["Restskat", "ca. 34.993"],
-  ["Procenttillæg (efter 1. juli)", "ca. 2.700"],
+  ["Restskat", "ca. 33.762"],
+  ["Procenttillæg (efter 1. juli)", "ca. 2.600"],
 ];
 
 const TJEKLISTE = [
@@ -165,9 +169,9 @@ const TJEKLISTE = [
       "Brug tallene ovenfor, felt for felt. Alle fire perioder til og med 2. kvartal 2026 koster nul kroner i moms. Regn med 800 kr. i gebyr per periode, der er indberettet for sent.",
   },
   {
-    titel: "Bekræft valutakursen",
+    titel: "Valutakursen er bekræftet",
     tekst:
-      "Nationalbankens GBP-kurs for 19-12-2025. Jeg har brugt 8,618, udledt af det, Jane selv indberettede. Afviger den, skal både rubrik C og rubrik 111 justeres med samme kurs.",
+      "AFKLARET 27-08-2026: Nationalbankens officielle middelkurs for 19-12-2025 er 8,5288 (Statistikbanken, serie DNVALD). Alle tal her er rettet til den. Den tidligere kurs 8,618 var regnet baglæns ud af det indberettede beløb og hvilede dermed på en indberetning, der i forvejen var for lav. 32.460 £ × 8,5288 = 276.845 kr.",
   },
   {
     titel: "Få en anden revisor til at se på periodiseringen",
@@ -298,11 +302,17 @@ export function OdinRedegoerelse() {
         </p>
         <p className="regnskab-viden-tekst">
           Problemet er grundlaget. Rubrik 111 lyder på{" "}
-          <strong>193.906 kr.</strong> Divideret med de tre første rater på
-          22.500 £ giver det kurs 8,618. De to sidste rater — 9.960 £ — er ikke
-          med. Ved samme kurs skulle hele fakturaen have været{" "}
-          <strong>279.742 kr.</strong> Der mangler{" "}
-          <strong>85.836 kr.</strong>
+          <strong>193.906 kr.</strong> Det svarer til de tre første rater —
+          22.500 £ — og altså til de penge, der var kommet ind, da
+          indberetningen blev lavet. De to sidste rater, 9.960 £, mangler.
+          Men en faktura hører til den dag, den er udstedt, ikke den dag
+          pengene lander: hele beløbet skulle have været med.
+        </p>
+        <p className="regnskab-viden-tekst">
+          Ved Nationalbankens officielle middelkurs for 19-12-2025 —{" "}
+          <strong>8,5288</strong>, hentet fra Statistikbanken og verificeret
+          27-08-2026 — er 32.460 £ lig <strong>276.845 kr.</strong> Der mangler
+          altså <strong>82.939 kr.</strong> i rubrik 111.
         </p>
 
         <div className="regnskab-viden-tabelwrap">
@@ -408,9 +418,11 @@ export function OdinRedegoerelse() {
       <p className="admin-fodnote">
         Grundlag: faktura INV-001, årsopgørelse 2025 (nr. 1, 30-03-2026), Wise
         firmakonto, Frøs privatkonto og kvitteringer. Alle beløb er afrundet til
-        hele kroner pr. felt, som momsblanketten kræver. Kurs 8,618 er brugt
-        hele vejen, så rubrik C og rubrik 111 hviler på samme omregning. Det her
-        er en arbejdsopgørelse — ikke autoriseret rådgivning.
+        hele kroner pr. felt, som momsblanketten kræver. Kursen er Nationalbankens
+        officielle middelkurs for 19-12-2025, <strong>8,5288</strong> (Statistikbanken,
+        serie DNVALD, verificeret 27-08-2026) — den eneste momsbekendtgørelsens
+        § 97, stk. 4 tillader. Rubrik C og rubrik 111 hviler på samme omregning.
+        Det her er en arbejdsopgørelse — ikke autoriseret rådgivning.
       </p>
     </>
   );
