@@ -60,6 +60,24 @@ a {
   text-decoration: none;
 }
 
+/* Links MIDT I en tekst skal kunne skelnes uden farvesyn. WCAG 1.4.1:
+   farve må ikke være det eneste, der markerer et link. Navigation og
+   knap-lignende links står for sig selv og er undtaget — det er kun links
+   inde i en sætning, der kan forsvinde i brødteksten. */
+p > a:not(.knap):not([class*="btn"]),
+li > a:not(.knap):not([class*="btn"]),
+.footer-cvr a,
+.contact-mail {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  text-decoration-thickness: 1px;
+}
+p > a:hover,
+li > a:hover,
+.footer-cvr a:hover {
+  text-decoration-thickness: 2px;
+}
+
 /* Tydelig fokus-ramme for tastaturbrugere (skader ikke muse-/touch-brug) */
 :focus-visible {
   outline: 2px solid var(--ember);
@@ -243,7 +261,12 @@ h3 {
 
 .nav-links a {
   position: relative;
-  padding: 6px 0;
+  /* Trykfladen skal kunne rammes med en tommelfinger. Understregningen
+     nedenfor er stadig knyttet til teksten, ikke til hele fladen. */
+  padding: 14px 0;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
   transition: color 0.2s;
 }
 
@@ -1129,7 +1152,8 @@ a.product-card:hover {
 
 .admin-felt {
   width: 100%;
-  padding: 11px 14px;
+  padding: 13px 14px;
+  min-height: 44px;
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -1143,7 +1167,8 @@ a.product-card:hover {
 }
 
 .admin-knap {
-  padding: 9px 16px;
+  padding: 13px 18px;
+  min-height: 44px;
   font-family: var(--font-mono), monospace;
   font-size: 12.5px;
   letter-spacing: 0.08em;
@@ -2612,6 +2637,19 @@ a.product-card:hover {
     scroll-behavior: auto;
   }
 
+  /* Alt der kører i ring stoppes. Aurora-drift, roterende ringe, pulserende
+     auraer og scanlines er stemning — for nogen er de kvalme og hovedpine,
+     og de gør samtidig små knapper svære at ramme, fordi målet flytter sig.
+     Engangs-animationer sættes til deres sluttilstand frem for at blive slået
+     fra, så indhold ikke bliver hængende usynligt. */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+
   .rise,
   .reveal {
     opacity: 1;
@@ -3297,7 +3335,9 @@ a.product-card:hover {
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
+  min-width: 0;
 }
+.regnskab-fradrag-hoved > * { min-width: 0; }
 .regnskab-fradrag-navn {
   font-weight: 600;
   font-size: 14.5px;
@@ -3305,6 +3345,11 @@ a.product-card:hover {
   display: inline-flex;
   align-items: center;
   gap: 7px;
+  /* Skal kunne ombryde. Uden wrap skubbes ?-knappen uden for skærmen på
+     smalle enheder, og overflow-x: clip skjuler den lydløst. */
+  flex-wrap: wrap;
+  min-width: 0;
+  max-width: 100%;
 }
 .regnskab-fradrag-tal {
   font-family: var(--font-mono), monospace;
@@ -3381,6 +3426,15 @@ a.product-card:hover {
 .regnskab-hjaelp:focus-visible {
   outline: 2px solid var(--ember-light);
   outline-offset: 2px;
+}
+/* WCAG 2.5.8 kræver mindst 24x24 CSS-px trykflade; cirklen er 19. Fladen
+   udvides usynligt til 45x45, så knappen kan rammes med en finger, uden at
+   cirklen ser anderledes ud eller flytter noget i layoutet. */
+.regnskab-hjaelp { position: relative; }
+.regnskab-hjaelp::after {
+  content: "";
+  position: absolute;
+  inset: -13px;
 }
 
 .regnskab-fradrag-forklaring {
@@ -3593,6 +3647,7 @@ a.product-card:hover {
   display: inline-block;
   padding: 1px 8px;
   margin-right: 9px;
+  flex: 0 0 auto;
   border: 1px solid var(--hud-line);
   border-radius: 2px;
   font-size: 11px;
@@ -3668,4 +3723,48 @@ a.product-card:hover {
   font-size: 13.5px;
   color: var(--dim);
   line-height: 1.6;
+}
+
+/* ── Periodevælger ──────────────────────────────────────────── */
+.regnskab-periodevaelger { display: flex; flex-direction: column; gap: 7px; }
+.regnskab-periode-spand {
+  margin: 0;
+  font-size: 12px;
+  font-family: var(--font-mono), monospace;
+  color: var(--faint);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.regnskab-periode-note {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 12.5px;
+  color: var(--dim);
+  line-height: 1.5;
+  max-width: 70ch;
+}
+
+/* ── Undernavigation i regnskabet ───────────────────────────── */
+.regnskab-undernav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin: -6px 0 18px;
+  padding: 0 0 0 2px;
+  border-bottom: 1px solid var(--hud-line-soft);
+}
+.regnskab-undernav a {
+  padding: 8px 14px;
+  font-size: 13px;
+  color: var(--dim);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.regnskab-undernav a:hover { color: var(--ink); }
+.regnskab-undernav a.aktiv {
+  color: var(--ember-light);
+  border-bottom-color: var(--ember);
 }

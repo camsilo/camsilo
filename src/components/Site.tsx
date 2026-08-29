@@ -260,14 +260,23 @@ export function Site() {
               </p>
             </a>
 
-            <div className="card product-card card-muted reveal" style={{ transitionDelay: "0.1s" }}>
-              <p className="card-tag">{t.nextTag}</p>
-              <h3>{t.nextTitle}</h3>
-              <p className="card-desc">{t.nextDesc}</p>
-              <p className="card-runes" aria-hidden="true">
-                ᛒᛁᛞᚨ
+            <a
+              className="card product-card reveal"
+              href="https://discebo.dk"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ transitionDelay: "0.1s" }}
+            >
+              <p className="card-tag tag-live">
+                <span className="dot" aria-hidden="true" />
+                {t.disceboTag}
               </p>
-            </div>
+              <h3>{t.disceboTitle}</h3>
+              <p className="card-desc">{t.disceboDesc}</p>
+              <p className="card-link">
+                {t.disceboLink} <span aria-hidden="true">↗</span>
+              </p>
+            </a>
           </div>
         </section>
 

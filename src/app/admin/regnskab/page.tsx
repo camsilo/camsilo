@@ -48,26 +48,87 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-const DELE = [
-  { id: "oversigt", navn: "Oversigt" },
-  { id: "odin", navn: "Odin spørger" },
-  { id: "fakturaer", navn: "Fakturaer" },
-  { id: "firma", navn: "Firma" },
-  { id: "privat", navn: "Privat" },
-  { id: "statistik", navn: "Statistik" },
-  { id: "moms", navn: "Moms" },
-  { id: "redegoerelse", navn: "Redegørelse" },
-  { id: "skat", navn: "Skat" },
-  { id: "fradrag", navn: "Fradrag" },
-  { id: "aarsopgoerelse", navn: "Årsopgørelse" },
-  { id: "frister", navn: "Frister" },
-  { id: "bilag", navn: "Bilag" },
-  { id: "import", navn: "Import" },
-  { id: "viden", navn: "Viden" },
-  { id: "opsaetning", navn: "Opsætning" },
+/**
+ * Faner grupperet i to niveauer. Seksten sideordnede faner var for mange at
+ * overskue; nu ligger de i syv grupper, hvor beslægtede ting står sammen —
+ * momsen med sin redegørelse, skatten med fradragene og årsopgørelsen.
+ * Grupper med kun én del vises som en enkelt fane uden underrække.
+ */
+const GRUPPER = [
+  {
+    id: "oversigt",
+    navn: "Oversigt",
+    dele: [{ id: "oversigt", navn: "Oversigt" }],
+  },
+  {
+    id: "bogen",
+    navn: "Bogen",
+    dele: [
+      { id: "odin", navn: "Odin spørger" },
+      { id: "firma", navn: "Firma" },
+      { id: "privat", navn: "Privat" },
+      { id: "statistik", navn: "Statistik" },
+    ],
+  },
+  {
+    id: "salg",
+    navn: "Salg",
+    dele: [
+      { id: "fakturaer", navn: "Fakturaer" },
+      { id: "bilag", navn: "Bilag" },
+    ],
+  },
+  {
+    id: "momsgruppe",
+    navn: "Moms",
+    dele: [
+      { id: "moms", navn: "Momsangivelse" },
+      { id: "redegoerelse", navn: "Redegørelse" },
+    ],
+  },
+  {
+    id: "skattegruppe",
+    navn: "Skat",
+    dele: [
+      { id: "skat", navn: "Virksomhedens skat" },
+      { id: "fradrag", navn: "Fradrag" },
+      { id: "aarsopgoerelse", navn: "Årsopgørelse" },
+    ],
+  },
+  {
+    id: "frister",
+    navn: "Frister",
+    dele: [{ id: "frister", navn: "Frister" }],
+  },
+  {
+    id: "vaerktoej",
+    navn: "Værktøj",
+    dele: [
+      { id: "import", navn: "Import" },
+      { id: "viden", navn: "Viden" },
+      { id: "opsaetning", navn: "Opsætning" },
+    ],
+  },
 ] as const;
 
-type Del = (typeof DELE)[number]["id"];
+type Del = (typeof GRUPPER)[number]["dele"][number]["id"];
+
+/** Alle gyldige del-id'er, fladt — bruges til at validere ?del= i URL'en. */
+const ALLE_DELE: readonly Del[] = GRUPPER.flatMap((g) =>
+  g.dele.map((d) => d.id as Del),
+);
+
+type Gruppe = {
+  readonly id: string;
+  readonly navn: string;
+  readonly dele: readonly { readonly id: Del; readonly navn: string }[];
+};
+
+/** Hvilken gruppe hører en del til? */
+function gruppeFor(del: Del): Gruppe {
+  const grupper: readonly Gruppe[] = GRUPPER;
+  return grupper.find((g) => g.dele.some((d) => d.id === del)) ?? grupper[0];
+}
 
 export default async function RegnskabSide({
   searchParams,
@@ -78,7 +139,7 @@ export default async function RegnskabSide({
 
   const sp = await searchParams;
   const oensketDel = (
-    DELE.some((d) => d.id === sp.del) ? sp.del : "oversigt"
+    ALLE_DELE.includes(sp.del as Del) ? sp.del : "oversigt"
   ) as Del;
 
   const [
@@ -103,6 +164,7 @@ export default async function RegnskabSide({
 
   // Før Odins onboarding er svaret, er opsætningen eneste visning.
   const del: Del = indstillinger.onboardingFaerdig ? oensketDel : "opsaetning";
+  const aktivGruppe = gruppeFor(del);
 
   const idag = idagIso();
   const iAar = Number(idag.slice(0, 4));
@@ -149,21 +211,46 @@ export default async function RegnskabSide({
         </header>
 
         {indstillinger.onboardingFaerdig && (
-          <nav className="admin-perioder regnskab-nav" aria-label="Regnskabs-del">
-            {DELE.map((d) => (
-              <Link
-                key={d.id}
-                href={`/admin/regnskab?del=${d.id}`}
-                aria-current={d.id === del ? "page" : undefined}
-                className={d.id === del ? "aktiv" : ""}
-              >
-                {d.navn}
-                {d.id === "odin" && uafklarede.length > 0 && (
-                  <span className="admin-badge">{uafklarede.length}</span>
-                )}
-              </Link>
-            ))}
-          </nav>
+          <>
+            <nav className="admin-perioder regnskab-nav" aria-label="Regnskabsområde">
+              {GRUPPER.map((g) => {
+                const aktiv = g.id === aktivGruppe.id;
+                const uafklaredeIGruppen =
+                  g.dele.some((d) => d.id === "odin") && uafklarede.length > 0;
+                return (
+                  <Link
+                    key={g.id}
+                    href={`/admin/regnskab?del=${g.dele[0].id}`}
+                    aria-current={aktiv ? "page" : undefined}
+                    className={aktiv ? "aktiv" : ""}
+                  >
+                    {g.navn}
+                    {uafklaredeIGruppen && (
+                      <span className="admin-badge">{uafklarede.length}</span>
+                    )}
+                  </Link>
+                );
+              })}
+            </nav>
+
+            {aktivGruppe.dele.length > 1 && (
+              <nav className="regnskab-undernav" aria-label={aktivGruppe.navn}>
+                {aktivGruppe.dele.map((d) => (
+                  <Link
+                    key={d.id}
+                    href={`/admin/regnskab?del=${d.id}`}
+                    aria-current={d.id === del ? "page" : undefined}
+                    className={d.id === del ? "aktiv" : ""}
+                  >
+                    {d.navn}
+                    {d.id === "odin" && uafklarede.length > 0 && (
+                      <span className="admin-badge">{uafklarede.length}</span>
+                    )}
+                  </Link>
+                ))}
+              </nav>
+            )}
+          </>
         )}
 
         <div className="odin-stak">
@@ -227,7 +314,11 @@ export default async function RegnskabSide({
           {del === "bilag" && <OdinBilag bilag={bilag} />}
 
           {del === "statistik" && (
-            <OdinStatistik transaktioner={transaktioner} idag={idag} />
+            <OdinStatistik
+              transaktioner={transaktioner}
+              idag={idag}
+              foersteFakturadato={fakturaer[0]?.fakturadato}
+            />
           )}
 
           {del === "moms" && (

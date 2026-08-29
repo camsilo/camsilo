@@ -30,3 +30,9 @@ next-env.d.ts
 
 # nested tool deps
 node_modules/
+
+# Test
+/.e2e-data
+/test-results
+/playwright-report
+/e2e/.session.json

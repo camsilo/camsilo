@@ -15,8 +15,8 @@ import {
   type StatKonto,
 } from "@/lib/regnskab/statistik";
 import { OdinKpi } from "@/components/admin/OdinKpi";
-
-type PeriodeValg = "iaar" | "12mdr" | "alt";
+import { PeriodeVaelger } from "@/components/admin/regnskab/PeriodeVaelger";
+import { intervalFor, type PeriodeValgId } from "@/lib/regnskab/perioder";
 
 const MD_KORT = [
   "jan", "feb", "mar", "apr", "maj", "jun",
@@ -26,31 +26,33 @@ const MD_KORT = [
 export function OdinStatistik({
   transaktioner,
   idag,
+  foersteFakturadato,
 }: {
   transaktioner: Transaktion[];
   idag: string;
+  foersteFakturadato?: string;
 }) {
   const [konto, setKonto] = useState<StatKonto>("begge");
-  const [periode, setPeriode] = useState<PeriodeValg>("iaar");
+  const [periode, setPeriode] = useState<PeriodeValgId>("iaar");
 
-  const { fra, til } = useMemo(() => {
-    if (periode === "iaar") return { fra: `${idag.slice(0, 4)}-01-01`, til: idag };
-    if (periode === "12mdr") {
-      const d = new Date(`${idag.slice(0, 7)}-01T12:00:00Z`);
-      d.setUTCMonth(d.getUTCMonth() - 11);
-      return { fra: d.toISOString().slice(0, 10), til: idag };
-    }
-    const aeldste = transaktioner.reduce(
-      (m, t) => (t.dato < m ? t.dato : m),
-      idag,
-    );
-    return { fra: aeldste, til: idag };
-  }, [periode, idag, transaktioner]);
-
-  const stat = useMemo(
-    () => beregnStatistik(transaktioner, konto, fra, til),
-    [transaktioner, konto, fra, til],
+  const aeldste = useMemo(
+    () => transaktioner.reduce((m, t) => (t.dato < m ? t.dato : m), idag),
+    [transaktioner, idag],
   );
+
+  const interval = useMemo(
+    () => intervalFor(periode, idag, aeldste, foersteFakturadato),
+    [periode, idag, aeldste, foersteFakturadato],
+  );
+
+  const stat = useMemo(() => {
+    // 12-timers-valget skærer på importtidspunkt, fordi bankposteringer
+    // ikke bærer et klokkeslæt. De øvrige valg skærer på bogføringsdato.
+    const grundlag = interval.fraTs
+      ? transaktioner.filter((t) => t.ts >= interval.fraTs!)
+      : transaktioner;
+    return beregnStatistik(grundlag, konto, interval.fra, interval.til);
+  }, [transaktioner, konto, interval]);
 
   const maksKategori = Math.max(1, ...stat.kategorier.map((k) => k.udOere));
   const maksForretning = Math.max(1, ...stat.forretninger.map((f) => f.udOere));
@@ -79,24 +81,7 @@ export function OdinStatistik({
               </button>
             ))}
           </div>
-          <div className="regnskab-bogvalg" role="group" aria-label="Periode">
-            {(
-              [
-                ["iaar", `I år (${idag.slice(0, 4)})`],
-                ["12mdr", "Seneste 12 mdr."],
-                ["alt", "Alt"],
-              ] as [PeriodeValg, string][]
-            ).map(([id, navn]) => (
-              <button
-                key={id}
-                type="button"
-                className={`regnskab-kategori${periode === id ? " valgt" : ""}`}
-                onClick={() => setPeriode(id)}
-              >
-                {navn}
-              </button>
-            ))}
-          </div>
+          <PeriodeVaelger valgt={periode} onVaelg={setPeriode} interval={interval} />
         </div>
       </section>
 

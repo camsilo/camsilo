@@ -28,10 +28,11 @@ export const dict = {
     termoDesc:
       "Beregnings- og læringsplatform til teknisk isolering. Ingeniørkalkulatorer efter DS 452 og EN ISO 12241, kompendium, prøver og AI-assistent — brugt i både undervisning og praksis.",
     termoLink: "Besøg termocalc.dk",
-    nextTag: "På beddingen · 2026",
-    nextTitle: "Det næste skib",
-    nextDesc:
-      "Det næste produkt er under opsejling. Vi bygger i stilhed og søsætter, når det er klar til at bære last.",
+    disceboTag: "Live · discebo.dk",
+    disceboTitle: "Discebo",
+    disceboDesc:
+      "Det faglige og sociale netværk for håndværkere. Materiale til over 120 fag og uddannelser, beregnere med 3D-visning og pladeudfoldning, projekt- og byggepladsstyring, timeregistrering med løneksport — og et firmalag med roller og rettigheder. Ét login, hele værkstedet.",
+    disceboLink: "Besøg discebo.dk",
 
     servicesLabel: "02 — Ydelser",
     servicesTitle: "Hvad vi smeder",
@@ -108,10 +109,11 @@ export const dict = {
     termoDesc:
       "Calculation and learning platform for technical insulation. Engineering calculators per DS 452 and EN ISO 12241, study material, exams and an AI assistant — used in classrooms and in the field.",
     termoLink: "Visit termocalc.dk",
-    nextTag: "On the slipway · 2026",
-    nextTitle: "The next ship",
-    nextDesc:
-      "The next product is under construction. We build quietly and launch when it is ready to carry cargo.",
+    disceboTag: "Live · discebo.dk",
+    disceboTitle: "Discebo",
+    disceboDesc:
+      "The professional and social network for skilled trades. Material for more than 120 trades and programmes, calculators with 3D views and sheet-metal development, project and site management, time tracking with payroll export — and a company layer with roles and permissions. One login, the whole workshop.",
+    disceboLink: "Visit discebo.dk",
 
     servicesLabel: "02 — Services",
     servicesTitle: "What we forge",
