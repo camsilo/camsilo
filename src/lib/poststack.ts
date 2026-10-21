@@ -120,8 +120,12 @@ function listeAf(raw: unknown): Record<string, unknown>[] {
 
 function tilMail(m: Record<string, unknown>): IndgaaendeMail {
   const s = (v: unknown) => (typeof v === "string" ? v : undefined);
+  // PostStack sender id som tal (fx 7). Læses det kun som streng, får ALLE mails
+  // id "" — og så deler de læst/arkiv/slet-tilstand: slet én, og alle forsvinder.
+  const idAf = (v: unknown) =>
+    typeof v === "number" && Number.isFinite(v) ? String(v) : s(v);
   return {
-    id: s(m.id) ?? s(m.publicId) ?? "",
+    id: idAf(m.id) ?? idAf(m.publicId) ?? idAf(m.email_id) ?? "",
     fromAddress: s(m.fromAddress) ?? s(m.from) ?? "(ukendt afsender)",
     toAddress: s(m.toAddress) ?? s(m.to) ?? "",
     subject: s(m.subject) ?? "(uden emne)",
@@ -147,12 +151,15 @@ export async function hentIndbakke(side = 1, prSide = 30): Promise<IndgaaendeMai
 export async function hentMail(id: string): Promise<IndgaaendeMail> {
   const raw = await ps<unknown>(`/inbound/${encodeURIComponent(id)}`);
   const o = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+  // GET /inbound/:id svøber i "inboundEmail"
   const inderst =
-    o.data && typeof o.data === "object"
-      ? (o.data as Record<string, unknown>)
-      : o.email && typeof o.email === "object"
-        ? (o.email as Record<string, unknown>)
-        : o;
+    o.inboundEmail && typeof o.inboundEmail === "object"
+      ? (o.inboundEmail as Record<string, unknown>)
+      : o.data && typeof o.data === "object"
+        ? (o.data as Record<string, unknown>)
+        : o.email && typeof o.email === "object"
+          ? (o.email as Record<string, unknown>)
+          : o;
   return tilMail(inderst);
 }
 
