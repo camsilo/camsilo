@@ -5,11 +5,12 @@
 // 'self'. frame-ancestors/base-uri/object-src strammer mod clickjacking/injection.
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com",
+  // hoststack.dev: HostStacks cookieløse analytics-tag (t.js) og dets hændelser.
+  "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://hoststack.dev",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://www.google-analytics.com https://www.googletagmanager.com",
   "font-src 'self'",
-  "connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com",
+  "connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://hoststack.dev",
   "worker-src 'self'",
   "manifest-src 'self'",
   "frame-ancestors 'none'",

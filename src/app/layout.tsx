@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Unbounded, Schibsted_Grotesk, Fragment_Mono } from "next/font/google";
 import { Sporing } from "@/components/Sporing";
+import { HostStackSporing } from "@/components/HostStackSporing";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { PWARegister } from "@/components/PWARegister";
 import "./globals.css";
@@ -144,6 +145,7 @@ export default function RootLayout({
         {children}
         <PWARegister />
         <Sporing />
+        <HostStackSporing />
         <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
       </body>
     </html>

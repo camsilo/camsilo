@@ -28,6 +28,8 @@ import { OdinDoegnring } from "@/components/admin/OdinDoegnring";
 import { OdinRealtid } from "@/components/admin/OdinRealtid";
 import { OdinGauge } from "@/components/admin/OdinGauge";
 import { OdinGaStatus } from "@/components/admin/OdinGaStatus";
+import { OdinSynlighed } from "@/components/admin/OdinSynlighed";
+import { hentSynlighed } from "@/lib/hoststack";
 import { adminLoginAction, adminLogoutAction } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -147,7 +149,9 @@ export default async function AdminSide({
       ? "beskeder"
       : sp.vis === "email"
         ? "email"
-        : "kommandocenter";
+        : sp.vis === "synlighed"
+          ? "synlighed"
+          : "kommandocenter";
 
   // Korrupt besked-lager kaster (skånsom degradering frem for at vælte /admin).
   let beskeder: Awaited<ReturnType<typeof hentBeskeder>> = [];
@@ -191,6 +195,8 @@ export default async function AdminSide({
     PERIODER.find((p) => p.id === valgt)?.label ?? valgt;
 
   const o = vis === "kommandocenter" ? await beregnOversigt(valgt) : null;
+  // Synlighed (HostStack, 24-10-2026): samme periodevalg som kommandocenteret.
+  const syn = vis === "synlighed" ? await hentSynlighed(valgt) : null;
 
   return (
     <main className="admin odin">
@@ -229,14 +235,21 @@ export default async function AdminSide({
               >
                 E-mail
               </Link>
+              <Link
+                href="/admin?vis=synlighed"
+                aria-current={vis === "synlighed" ? "page" : undefined}
+                className={vis === "synlighed" ? "aktiv" : ""}
+              >
+                Synlighed
+              </Link>
               <Link href="/admin/regnskab">Regnskab</Link>
             </nav>
-            {vis === "kommandocenter" && (
+            {(vis === "kommandocenter" || vis === "synlighed") && (
               <nav className="admin-perioder" aria-label="Periode">
                 {PERIODER.map((p) => (
                   <Link
                     key={p.id}
-                    href={`/admin?vis=kommandocenter&periode=${p.id}`}
+                    href={`/admin?vis=${vis}&periode=${p.id}`}
                     aria-current={p.id === valgt ? "page" : undefined}
                     className={p.id === valgt ? "aktiv" : ""}
                   >
@@ -253,6 +266,13 @@ export default async function AdminSide({
             </form>
           </div>
         </header>
+
+        {/* ── SYNLIGHED (HostStack) ─────────────────────────────── */}
+        {vis === "synlighed" && syn && (
+          <div className="odin-stak">
+            <OdinSynlighed d={syn} />
+          </div>
+        )}
 
         {/* ── BESKEDER ───────────────────────────────────────────── */}
         {vis === "beskeder" &&

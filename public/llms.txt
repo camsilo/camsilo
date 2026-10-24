@@ -1,0 +1,21 @@
+# Camsilo
+
+> Camsilo er et lille dansk softwarestudie (enkeltmandsvirksomhed, CVR 45925145) der designer og bygger digitale produkter: webapplikationer og SaaS, fagværktøjer og beregnere, AI-integration samt drift og deployment — fra første idé til drift i produktion.
+
+Kontakt: kontakt@camsilo.dk · https://camsilo.dk/#kontakt
+
+## Produkter
+
+- [Discebo](https://discebo.dk/): det faglige og sociale netværk for håndværkere — materiale til 130+ fag og uddannelser, beregnere med 3D-visning og pladeudfoldning, projekt- og byggepladsstyring, timeregistrering med løneksport og et firmalag med roller og rettigheder. Ét login, hele værkstedet. Engelsk udgave: https://discebo.com/
+- [TermoCalc](https://termocalc.dk/): beregnings- og læringsplatform til teknisk isolering — ingeniørkalkulatorer efter DS 452 og EN ISO 12241, kompendium, prøver og AI-assistent, brugt i undervisning og praksis.
+
+## Ydelser
+
+- Webapplikationer og SaaS: produktionsklare webprodukter — frontend, backend, data og betaling.
+- Fagværktøjer og beregnere: domænespecifikke kalkulatorer og systemer, der følger gældende standarder og rigtige tal.
+- AI-integration: assistenter, automatisering og søgning bygget på sprogmodeller, forankret i kundens faglighed og data.
+- Drift og deployment: hosting, domæner, CI og overvågning.
+
+## Om
+
+Små hold, skarpe værktøjer og håndværk der holder. Principper: enkelhed, præcision (rigtige tal, rigtige standarder) og holdbarhed (bygget til drift, ikke til demo).
